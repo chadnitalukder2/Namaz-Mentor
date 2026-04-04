@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Path } from 'react-native-svg';
 import { Colors } from '../constants/theme';
 
-const ICON_SIZE = 44;
+const DEFAULT_ICON_SIZE = 44;
 
 /** From Figma export (frame ~370:96), viewBox 0 0 44 44 */
 const PATH_PIN_OUTER =
@@ -12,15 +12,23 @@ const PATH_PIN_OUTER =
 const PATH_PIN_INNER =
   'M28.4165 20.1667C28.4165 23.7105 25.5436 26.5833 21.9998 26.5833C18.456 26.5833 15.5831 23.7105 15.5831 20.1667C15.5831 16.6228 18.456 13.75 21.9998 13.75C25.5436 13.75 28.4165 16.6228 28.4165 20.1667Z';
 
-export default function LocationPinIllustration() {
+export default function LocationPinIllustration({
+  size = DEFAULT_ICON_SIZE,
+  centerFill = Colors.backgroundDark,
+}) {
   const gradId = `loc-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const ring = Math.max(28, Math.round((size * 80) / DEFAULT_ICON_SIZE));
 
   return (
-    <View style={styles.row} accessible accessibilityLabel="Location pin">
-      <View style={styles.circle}>
+    <View
+      style={[styles.row, { width: ring, height: ring, maxWidth: ring }]}
+      accessible
+      accessibilityLabel="Location pin"
+    >
+      <View style={[styles.circle, { width: ring, height: ring, borderRadius: ring / 2 }]}>
         <Svg
-          width={ICON_SIZE}
-          height={ICON_SIZE}
+          width={size}
+          height={size}
           viewBox="0 0 44 44"
           fill="none"
           accessibilityRole="image"
@@ -40,7 +48,7 @@ export default function LocationPinIllustration() {
             </LinearGradient>
           </Defs>
           <Path d={PATH_PIN_OUTER} fill={`url(#${gradId})`} />
-          <Path d={PATH_PIN_INNER} fill={Colors.backgroundDark} />
+          <Path d={PATH_PIN_INNER} fill={centerFill} />
         </Svg>
       </View>
     </View>
@@ -49,16 +57,10 @@ export default function LocationPinIllustration() {
 
 const styles = StyleSheet.create({
   row: {
-    width: '100%',
-    maxWidth: 350,
-    height: 80,
     alignItems: 'center',
     justifyContent: 'center',
   },
   circle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },

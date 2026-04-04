@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
+import MainTabBar from '../components/MainTabBar';
 
 // ─── Compass Component ────────────────────────────────────────────
 const QiblaCompass = ({ degrees = 282 }) => {
@@ -162,74 +163,11 @@ export default function QiblaScreen({ navigation }) {
 
       {/* Tab Bar */}
       <View style={styles.tabBarWrapper}>
-        <QiblaTabBar navigation={navigation} />
+        <MainTabBar activeTab="qibla" navigation={navigation} />
       </View>
     </View>
   );
 }
-
-function QiblaTabBar({ navigation }) {
-  const tabs = [
-    { id: 'home', icon: '🏠', screen: 'Home' },
-    { id: 'quran', icon: '📖', screen: 'Quran' },
-    { id: 'qibla', icon: '🧭', screen: 'Qibla', label: 'Qibla' },
-    { id: 'dhikr', icon: '🔮', screen: 'Dhikr' },
-  ];
-
-  return (
-    <View style={tabStyles.tabBar}>
-      {tabs.map((tab) => (
-        <TouchableOpacity
-          key={tab.id}
-          onPress={() => navigation?.navigate(tab.screen)}
-          style={[
-            tabStyles.tabItem,
-            tab.id === 'qibla' && tabStyles.tabItemActive,
-          ]}
-          activeOpacity={0.8}
-        >
-          <Text style={tabStyles.tabIcon}>{tab.icon}</Text>
-          {tab.id === 'qibla' && (
-            <Text style={tabStyles.tabLabel}>{tab.label}</Text>
-          )}
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-}
-
-const tabStyles = StyleSheet.create({
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: Colors.backgroundBlue,
-    borderRadius: 51,
-    paddingHorizontal: 4,
-    paddingVertical: 4,
-    alignItems: 'center',
-    gap: 4,
-    marginHorizontal: 20,
-    marginBottom: 8,
-  },
-  tabItem: {
-    flex: 1,
-    height: 53,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 37,
-    flexDirection: 'row',
-    gap: 8,
-  },
-  tabItemActive: {
-    backgroundColor: Colors.backgroundDark,
-    flex: 1.8,
-  },
-  tabIcon: { fontSize: 18 },
-  tabLabel: {
-    ...Fonts.medium,
-    fontSize: 12,
-    color: Colors.textWhite,
-  },
-});
 
 const styles = StyleSheet.create({
   container: {

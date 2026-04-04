@@ -6,7 +6,28 @@ import {
   StyleSheet,
   Image,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
+import NotificationBellIllustration from './NotificationBellIllustration';
+import {
+  TabHomeIcon,
+  TabQuranIcon,
+  TabQiblaIcon,
+  TabDhikrIcon,
+} from './MainTabIcons';
+import FajrPrayerIcon from './FajrPrayerIcon';
+import DhuhrPrayerIcon from './DhuhrPrayerIcon';
+import AsrPrayerIcon from './AsrPrayerIcon';
+import MaghribPrayerIcon from './MaghribPrayerIcon';
+import IshaPrayerIcon from './IshaPrayerIcon';
+
+const PRAYER_SVG_ICONS = {
+  fajr: FajrPrayerIcon,
+  dhuhr: DhuhrPrayerIcon,
+  asr: AsrPrayerIcon,
+  maghrib: MaghribPrayerIcon,
+  isha: IshaPrayerIcon,
+};
 
 // ─── Primary Button ──────────────────────────────────────────────
 export const PrimaryButton = ({ title, onPress, style }) => (
@@ -53,18 +74,24 @@ export const DotIndicator = ({ total, active }) => {
 
 // ─── Prayer Row Card ─────────────────────────────────────────────
 export const PrayerCard = ({ prayer, isNext }) => {
-  const prayerIcons = {
-    'sun-cloud': '🌤',
-    sun: '☀️',
-    cloud: '☁️',
-    'moon-cloud': '🌙',
-    moon: '🌑',
-  };
+  const iconColor = isNext ? Colors.gold : Colors.textGrey;
+  const SvgIcon = PRAYER_SVG_ICONS[prayer.icon];
 
   return (
     <View style={[styles.prayerCard, isNext && styles.prayerCardNext]}>
       <View style={styles.prayerLeft}>
-        <Text style={styles.prayerIcon}>{prayerIcons[prayer.icon] || '🕌'}</Text>
+        {SvgIcon ? (
+          <View style={[styles.prayerSvgIconWrap, !isNext && styles.prayerIconMuted]}>
+            <SvgIcon size={28} />
+          </View>
+        ) : (
+          <MaterialCommunityIcons
+            name="mosque"
+            size={26}
+            color={iconColor}
+            style={styles.prayerIconGlyph}
+          />
+        )}
         <Text style={[styles.prayerName, isNext && styles.prayerNameNext]}>
           {prayer.name}
         </Text>
@@ -74,9 +101,13 @@ export const PrayerCard = ({ prayer, isNext }) => {
           {prayer.time}
         </Text>
         {prayer.completed ? (
-          <Text style={styles.checkIcon}>✓✓</Text>
+          <MaterialCommunityIcons
+            name="check-all"
+            size={22}
+            color="#4CAF50"
+          />
         ) : (
-          <Text style={styles.bellIcon}>🔔</Text>
+          <NotificationBellIllustration size={24} compact />
         )}
       </View>
     </View>
@@ -95,30 +126,41 @@ export const BackButton = ({ onPress }) => (
   </TouchableOpacity>
 );
 
+const TAB_ICONS_UI = {
+  home: TabHomeIcon,
+  quran: TabQuranIcon,
+  qibla: TabQiblaIcon,
+  dhikr: TabDhikrIcon,
+};
+
 // ─── Tab Bar ──────────────────────────────────────────────────────
 export const TabBar = ({ activeTab, onTabPress }) => {
   const tabs = [
-    { id: 'home', label: 'Home', icon: '⊞' },
-    { id: 'quran', label: 'Quran', icon: '📖' },
-    { id: 'qibla', label: 'Qibla', icon: '🧭' },
-    { id: 'dhikr', label: 'Dhikr', icon: '🔮' },
+    { id: 'home', label: 'Home' },
+    { id: 'quran', label: 'Quran' },
+    { id: 'qibla', label: 'Qibla' },
+    { id: 'dhikr', label: 'Dhikr' },
   ];
 
   return (
     <View style={styles.tabBar}>
-      {tabs.map((tab) => (
-        <TouchableOpacity
-          key={tab.id}
-          onPress={() => onTabPress(tab.id)}
-          style={[styles.tabItem, activeTab === tab.id && styles.tabItemActive]}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.tabIcon}>{tab.icon}</Text>
-          {activeTab === tab.id && (
-            <Text style={styles.tabLabel}>{tab.label}</Text>
-          )}
-        </TouchableOpacity>
-      ))}
+      {tabs.map((tab) => {
+        const Icon = TAB_ICONS_UI[tab.id];
+        const isActive = activeTab === tab.id;
+        return (
+          <TouchableOpacity
+            key={tab.id}
+            onPress={() => onTabPress(tab.id)}
+            style={[styles.tabItem, isActive && styles.tabItemActive]}
+            activeOpacity={0.8}
+          >
+            <View style={styles.tabIconSlot}>
+              <Icon size={24} active={isActive} />
+            </View>
+            {isActive && <Text style={styles.tabLabel}>{tab.label}</Text>}
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 };
@@ -191,8 +233,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  prayerIcon: {
-    fontSize: 22,
+  prayerIconGlyph: {
+    marginRight: 2,
+  },
+  prayerSvgIconWrap: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 2,
+  },
+  prayerIconMuted: {
+    opacity: 0.5,
   },
   prayerName: {
     ...Fonts.medium,
@@ -215,15 +267,6 @@ const styles = StyleSheet.create({
   prayerTimeNext: {
     color: Colors.gold,
   },
-  checkIcon: {
-    fontSize: 14,
-    color: '#4CAF50',
-  },
-  bellIcon: {
-    fontSize: 16,
-    color: Colors.textMuted,
-  },
-
   // Section Header
   sectionHeader: {
     ...Fonts.bold,
@@ -269,8 +312,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundDark,
     flex: 1.8,
   },
-  tabIcon: {
-    fontSize: 18,
+  tabIconSlot: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   tabLabel: {
     ...Fonts.medium,

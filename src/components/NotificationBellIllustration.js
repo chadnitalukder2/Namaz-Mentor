@@ -3,8 +3,8 @@ import { View, StyleSheet } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Path } from 'react-native-svg';
 import { Colors } from '../constants/theme';
 
-const ICON_SIZE = 44;
-const STROKE_WIDTH = 2.24936;
+const DEFAULT_SIZE = 44;
+const BASE_STROKE = 2.24936;
 
 /** Figma export (frame ~370:139), viewBox 0 0 44 44 */
 const PATH_BELL =
@@ -16,49 +16,75 @@ const PATH_CLAPPER =
 /**
  * Notification onboarding — capsule (#123859) + bell from Figma (gold gradient fill/stroke).
  */
-export default function NotificationBellIllustration() {
+export default function NotificationBellIllustration({
+  size = DEFAULT_SIZE,
+  compact = false,
+}) {
   const gradId = `notif-gold-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const strokeW = (BASE_STROKE * size) / DEFAULT_SIZE;
+
+  const svg = (
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 44 44"
+      fill="none"
+      accessibilityRole="image"
+    >
+      <Defs>
+        <LinearGradient
+          id={gradId}
+          x1="22.0033"
+          y1="4.58401"
+          x2="22.0019"
+          y2="33"
+          gradientUnits="userSpaceOnUse"
+        >
+          <Stop stopColor={Colors.goldStart} offset="0" />
+          <Stop stopColor={Colors.goldMid} offset="0.5" />
+          <Stop stopColor={Colors.goldEnd} offset="1" />
+        </LinearGradient>
+      </Defs>
+      <Path
+        d={PATH_CLAPPER}
+        stroke={Colors.gold}
+        strokeWidth={strokeW}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d={PATH_BELL}
+        fill={`url(#${gradId})`}
+        stroke={`url(#${gradId})`}
+        strokeWidth={strokeW}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+
+  if (compact) {
+    return (
+      <View
+        style={[styles.row, { width: size, height: size }]}
+        accessible
+        accessibilityLabel="Notification bell"
+      >
+        {svg}
+      </View>
+    );
+  }
+
+  const ring = Math.max(28, Math.round((size * 80) / DEFAULT_SIZE));
 
   return (
-    <View style={styles.row} accessible accessibilityLabel="Notification bell">
-      <View style={styles.circle}>
-        <Svg
-          width={ICON_SIZE}
-          height={ICON_SIZE}
-          viewBox="0 0 44 44"
-          fill="none"
-          accessibilityRole="image"
-        >
-          <Defs>
-            <LinearGradient
-              id={gradId}
-              x1="22.0033"
-              y1="4.58401"
-              x2="22.0019"
-              y2="33"
-              gradientUnits="userSpaceOnUse"
-            >
-              <Stop stopColor={Colors.goldStart} offset="0" />
-              <Stop stopColor={Colors.goldMid} offset="0.5" />
-              <Stop stopColor={Colors.goldEnd} offset="1" />
-            </LinearGradient>
-          </Defs>
-          <Path
-            d={PATH_CLAPPER}
-            stroke={Colors.gold}
-            strokeWidth={STROKE_WIDTH}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <Path
-            d={PATH_BELL}
-            fill={`url(#${gradId})`}
-            stroke={`url(#${gradId})`}
-            strokeWidth={STROKE_WIDTH}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </Svg>
+    <View
+      style={[styles.row, { width: ring, height: ring, maxWidth: ring }]}
+      accessible
+      accessibilityLabel="Notification bell"
+    >
+      <View style={[styles.circle, { width: ring, height: ring, borderRadius: ring / 2 }]}>
+        {svg}
       </View>
     </View>
   );
@@ -66,16 +92,10 @@ export default function NotificationBellIllustration() {
 
 const styles = StyleSheet.create({
   row: {
-    width: '100%',
-    maxWidth: 350,
-    height: 80,
     alignItems: 'center',
     justifyContent: 'center',
   },
   circle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },

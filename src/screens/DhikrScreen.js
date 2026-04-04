@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
 import { DHIKR_CATEGORIES } from '../constants/data';
+import MainTabBar from '../components/MainTabBar';
 
 // ─── Circular Counter ─────────────────────────────────────────────
 const TasbihCounter = ({ count, target, onPress, onReset, onSetTarget }) => {
@@ -186,74 +187,11 @@ export default function DhikrScreen({ navigation }) {
 
       {/* Tab Bar */}
       <View style={styles.tabBarWrapper}>
-        <DhikrTabBar navigation={navigation} />
+        <MainTabBar activeTab="dhikr" navigation={navigation} />
       </View>
     </View>
   );
 }
-
-function DhikrTabBar({ navigation }) {
-  const tabs = [
-    { id: 'home', icon: '🏠', screen: 'Home' },
-    { id: 'quran', icon: '📖', screen: 'Quran' },
-    { id: 'qibla', icon: '🧭', screen: 'Qibla' },
-    { id: 'dhikr', icon: '🔮', screen: 'Dhikr', label: 'Dhikr' },
-  ];
-
-  return (
-    <View style={tabStyles.tabBar}>
-      {tabs.map((tab) => (
-        <TouchableOpacity
-          key={tab.id}
-          onPress={() => navigation?.navigate(tab.screen)}
-          style={[
-            tabStyles.tabItem,
-            tab.id === 'dhikr' && tabStyles.tabItemActive,
-          ]}
-          activeOpacity={0.8}
-        >
-          <Text style={tabStyles.tabIcon}>{tab.icon}</Text>
-          {tab.id === 'dhikr' && (
-            <Text style={tabStyles.tabLabel}>{tab.label}</Text>
-          )}
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-}
-
-const tabStyles = StyleSheet.create({
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: Colors.backgroundBlue,
-    borderRadius: 51,
-    paddingHorizontal: 4,
-    paddingVertical: 4,
-    alignItems: 'center',
-    gap: 4,
-    marginHorizontal: 20,
-    marginBottom: 8,
-  },
-  tabItem: {
-    flex: 1,
-    height: 53,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 37,
-    flexDirection: 'row',
-    gap: 8,
-  },
-  tabItemActive: {
-    backgroundColor: Colors.backgroundDark,
-    flex: 1.8,
-  },
-  tabIcon: { fontSize: 18 },
-  tabLabel: {
-    ...Fonts.medium,
-    fontSize: 12,
-    color: Colors.textWhite,
-  },
-});
 
 const styles = StyleSheet.create({
   container: {
