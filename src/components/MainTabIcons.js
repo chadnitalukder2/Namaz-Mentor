@@ -158,22 +158,75 @@ export function TabQuranIcon({ size = 24, active = false }) {
   );
 }
 
-/** Qibla — Figma 24×24 */
-export function TabQiblaIcon({ size = 24, active: _active = false }) {
+const QIBLA_INACTIVE_RING =
+  'M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z';
+const QIBLA_INACTIVE_NEEDLE =
+  'M13.6929 7.47664L10.9605 8.60175C10.1362 8.94115 9.72411 9.11084 9.41748 9.41748C9.11084 ' +
+  '9.72411 8.94115 10.1362 8.60175 10.9605L7.47664 13.6929C6.63274 15.7424 6.21079 16.7671 ' +
+  '6.72185 17.2782C7.2329 17.7892 8.25764 17.3673 10.3071 16.5234L13.0395 15.3982C13.8638 ' +
+  '15.0589 14.2759 14.8892 14.5825 14.5825C14.8892 14.2759 15.0589 13.8638 15.3982 13.0395L16.5234 ' +
+  '10.3071C17.3673 8.25764 17.7892 7.2329 17.2782 6.72185C16.7671 6.21079 15.7424 6.63274 13.6929 7.47664Z';
+
+const QIBLA_ACTIVE_CENTER_INK = '#141B34';
+
+/** Qibla — Figma 24×24 inactive; 22×22 active (pill) */
+export function TabQiblaIcon({ size = 24, active = false }) {
   const w = size;
   const h = size;
-  const pathRing =
-    'M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z';
-  const pathNeedle =
-    'M13.6929 7.47664L10.9605 8.60175C10.1362 8.94115 9.72411 9.11084 9.41748 9.41748C9.11084 ' +
-    '9.72411 8.94115 10.1362 8.60175 10.9605L7.47664 13.6929C6.63274 15.7424 6.21079 16.7671 ' +
-    '6.72185 17.2782C7.2329 17.7892 8.25764 17.3673 10.3071 16.5234L13.0395 15.3982C13.8638 ' +
-    '15.0589 14.2759 14.8892 14.5825 14.5825C14.8892 14.2759 15.0589 13.8638 15.3982 13.0395L16.5234 ' +
-    '10.3071C17.3673 8.25764 17.7892 7.2329 17.2782 6.72185C16.7671 6.21079 15.7424 6.63274 13.6929 7.47664Z';
+
+  if (active) {
+    const gradId = `qibla-tab-active-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+    const pathRing =
+      'M20.1667 11C20.1667 16.0626 16.0626 20.1667 11 20.1667C5.9374 20.1667 1.83334 16.0626 ' +
+      '1.83334 11C1.83334 5.93738 5.9374 1.83333 11 1.83333C16.0626 1.83333 20.1667 5.93738 20.1667 11Z';
+    const pathNeedle =
+      'M12.5518 6.85359L10.0471 7.88495C9.29152 8.19606 8.91378 8.35161 8.6327 8.6327C8.35161 ' +
+      '8.91378 8.19606 9.29152 7.88495 10.0471L6.85359 12.5518C6.08002 14.4305 5.69323 15.3698 ' +
+      '6.1617 15.8384C6.63017 16.3068 7.56951 15.92 9.44818 15.1465L11.9529 14.115C12.7085 13.804 ' +
+      '13.0862 13.6484 13.3673 13.3673C13.6484 13.0862 13.804 12.7085 14.115 11.9529L15.1465 9.44818' +
+      'C15.92 7.56951 16.3068 6.63017 15.8384 6.1617C15.3698 5.69323 14.4305 6.08002 12.5518 6.85359Z';
+    const pathPivot = 'M11 11V11.01';
+
+    return (
+      <Svg width={w} height={h} viewBox="0 0 22 22" fill="none" accessibilityRole="image">
+        <Defs>
+          <LinearGradient
+            id={gradId}
+            x1="11.0019"
+            y1="1.83378"
+            x2="11.0008"
+            y2="20.1667"
+            gradientUnits="userSpaceOnUse"
+          >
+            <Stop stopColor={Colors.goldStart} offset="0" />
+            <Stop stopColor={Colors.goldMid} offset="0.5" />
+            <Stop stopColor={Colors.goldEnd} offset="1" />
+          </LinearGradient>
+        </Defs>
+        <Path d={pathRing} fill={`url(#${gradId})`} />
+        <Path d={pathNeedle} fill={Colors.backgroundDark} />
+        <Path
+          d={pathPivot}
+          stroke={QIBLA_ACTIVE_CENTER_INK}
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path
+          d={pathPivot}
+          stroke={Colors.gold}
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </Svg>
+    );
+  }
+
   return (
     <Svg width={w} height={h} viewBox="0 0 24 24" fill="none" accessibilityRole="image">
       <Path
-        d={pathRing}
+        d={QIBLA_INACTIVE_RING}
         fill={BLUE_SOFT}
         stroke={BLUE_SOFT}
         strokeWidth={1.5}
@@ -181,7 +234,7 @@ export function TabQiblaIcon({ size = 24, active: _active = false }) {
         strokeLinejoin="round"
       />
       <Path
-        d={pathNeedle}
+        d={QIBLA_INACTIVE_NEEDLE}
         fill={BLUE_DEEP}
         stroke={BLUE_DEEP}
         strokeWidth={1.5}
