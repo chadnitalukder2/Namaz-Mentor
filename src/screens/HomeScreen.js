@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,42 +7,19 @@ import {
   StatusBar,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
 import { PrayerCard } from '../components/UIComponents';
-import { PRAYERS } from '../constants/data';
 import LocationPinIllustration from '../components/LocationPinIllustration';
 import MainTabBar from '../components/MainTabBar';
-
-function useCountdown(targetMinutes = 15, targetSeconds = 43) {
-  const [time, setTime] = useState({
-    hours: 0,
-    minutes: targetMinutes,
-    seconds: targetSeconds,
-  });
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTime((prev) => {
-        let { hours, minutes, seconds } = prev;
-        if (seconds > 0) return { hours, minutes, seconds: seconds - 1 };
-        if (minutes > 0) return { hours, minutes: minutes - 1, seconds: 59 };
-        if (hours > 0) return { hours: hours - 1, minutes: 59, seconds: 59 };
-        return { hours: 0, minutes: 0, seconds: 0 };
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${pad(time.hours)}:${pad(time.minutes)}:${pad(time.seconds)}`;
-}
+import { usePrayerTimes, useCountdownToDate } from '../hooks/usePrayerData';
 
 export default function HomeScreen({ navigation }) {
-  const countdown = useCountdown(15, 43);
-  const nextPrayer = PRAYERS.find((p) => !p.completed);
+  const { prayers, nextPrayer, nextPrayerAt, locationLabel, loading } = usePrayerTimes();
+  const countdown = useCountdownToDate(nextPrayerAt);
 
   const today = new Date();
   const dateString = today.toLocaleDateString('en-US', {
@@ -113,7 +90,7 @@ export default function HomeScreen({ navigation }) {
           contentContainerStyle={styles.prayerList}
           showsVerticalScrollIndicator={false}
         >
-          {PRAYERS.map((prayer) => (
+          {prayers.map((prayer) => (
             <PrayerCard
               key={prayer.id}
               prayer={prayer}
@@ -169,6 +146,10 @@ const styles = StyleSheet.create({
     ...Fonts.semiBold,
     fontSize: 15,
     color: Colors.textWhite,
+    maxWidth: 220,
+  },
+  locationSpinner: {
+    marginLeft: 4,
   },
   settingsBtn: {
     width: 44,

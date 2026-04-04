@@ -1,40 +1,36 @@
-export const PRAYERS = [
-  {
-    id: 'fajr',
-    name: 'Fajr',
-    time: '5:24 AM',
-    completed: true,
-    icon: 'fajr',
-  },
-  {
-    id: 'dhuhr',
-    name: 'Dhuhr',
-    time: '12:45 PM',
-    completed: false,
-    icon: 'dhuhr',
-  },
-  {
-    id: 'asr',
-    name: 'Asr',
-    time: '03:05 PM',
-    completed: false,
-    icon: 'asr',
-  },
-  {
-    id: 'maghrib',
-    name: 'Maghrib',
-    time: '5:54 PM',
-    completed: false,
-    icon: 'maghrib',
-  },
-  {
-    id: 'isha',
-    name: 'Isha',
-    time: '7:30 PM',
-    completed: false,
-    icon: 'isha',
-  },
+/** Maps app rows to AlAdhan `timings` keys */
+export const PRAYER_DEFINITIONS = [
+  { id: 'fajr', name: 'Fajr', icon: 'fajr', timingKey: 'Fajr' },
+  { id: 'dhuhr', name: 'Dhuhr', icon: 'dhuhr', timingKey: 'Dhuhr' },
+  { id: 'asr', name: 'Asr', icon: 'asr', timingKey: 'Asr' },
+  { id: 'maghrib', name: 'Maghrib', icon: 'maghrib', timingKey: 'Maghrib' },
+  { id: 'isha', name: 'Isha', icon: 'isha', timingKey: 'Isha' },
 ];
+
+/** Used when location permission is denied or the API fails (~ Sylhet). */
+export const FALLBACK_LOCATION = {
+  name: 'Sylhet',
+  latitude: 24.8949,
+  longitude: 91.8687,
+};
+
+/**
+ * Offline / error fallback (24h `rawTime` for countdown logic).
+ * `completed` is ignored at runtime; recomputed from clock.
+ */
+export const FALLBACK_PRAYERS = [
+  { id: 'fajr', name: 'Fajr', time: '5:24 AM', rawTime: '05:24', icon: 'fajr' },
+  { id: 'dhuhr', name: 'Dhuhr', time: '12:45 PM', rawTime: '12:45', icon: 'dhuhr' },
+  { id: 'asr', name: 'Asr', time: '3:05 PM', rawTime: '15:05', icon: 'asr' },
+  { id: 'maghrib', name: 'Maghrib', time: '5:54 PM', rawTime: '17:54', icon: 'maghrib' },
+  { id: 'isha', name: 'Isha', time: '7:30 PM', rawTime: '19:30', icon: 'isha' },
+];
+
+/** @deprecated Use FALLBACK_PRAYERS + computed completion */
+export const PRAYERS = FALLBACK_PRAYERS.map((p) => ({
+  ...p,
+  completed: false,
+}));
 
 export const SURAHS = [
   { id: 1, name: 'Al-Fatihah', translation: 'The Opening', ayahs: 7 },
