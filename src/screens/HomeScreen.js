@@ -10,10 +10,10 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
 import { PrayerCard } from '../components/UIComponents';
 import LocationPinIllustration from '../components/LocationPinIllustration';
+import SettingsGearIllustration from '../components/SettingsGearIllustration';
 import MainTabBar from '../components/MainTabBar';
 import { usePrayerTimes, useCountdownToDate } from '../hooks/usePrayerData';
 
@@ -53,7 +53,7 @@ export default function HomeScreen({ navigation }) {
             accessibilityRole="button"
             accessibilityLabel="Open settings"
           >
-            <Ionicons name="settings-outline" size={22} color={Colors.textFrost} />
+            <SettingsGearIllustration size={22} />
           </TouchableOpacity>
         </View>
 
@@ -154,12 +154,12 @@ const styles = StyleSheet.create({
   settingsBtn: {
     width: 44,
     height: 44,
-    backgroundColor: Colors.backgroundCard,
+    backgroundColor: 'transparent',
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'transparent',
   },
 
   hero: {

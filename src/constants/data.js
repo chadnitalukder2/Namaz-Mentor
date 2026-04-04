@@ -9,9 +9,9 @@ export const PRAYER_DEFINITIONS = [
 
 /** Used when location permission is denied or the API fails (~ Sylhet). */
 export const FALLBACK_LOCATION = {
-  name: 'Sylhet',
-  latitude: 24.8949,
-  longitude: 91.8687,
+  name: 'Sylhet, Bangladesh',
+  latitude: 24.8948,
+  longitude: 91.869,
 };
 
 /**
