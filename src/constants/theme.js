@@ -9,8 +9,11 @@ export const Colors = {
 
   // Text
   textWhite: '#FFFFFF',
+  textWarmCream: '#FFF2DC',
   textLight: '#F3F3FA',
   textLightAlt: '#FCFCFF',
+  /** Adhan / notification onboarding heading (Figma fill_7UVVH8) */
+  textFrost: '#F1F7FF',
   textMuted: '#8E8F9D',
   textGrey: '#B0B1BC',
   textSubtle: '#8f8f8f',
@@ -27,6 +30,8 @@ export const Colors = {
   buttonDark: '#021226',
   separator: 'rgba(255,255,255,0.1)',
   dotInactive: 'rgba(255,255,255,0.25)',
+  dotActivePill: '#91AAC8',
+  dotInactiveDark: '#414D5C',
 };
 
 export const Fonts = {

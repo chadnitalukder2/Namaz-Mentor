@@ -3,9 +3,12 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // Screens
+import SplashScreen from '../screens/SplashScreen';
 import WelcomeScreen from '../screens/WelcomeScreen';
 import LocationPermissionScreen from '../screens/LocationPermissionScreen';
 import NotificationPermissionScreen from '../screens/NotificationPermissionScreen';
+
+// Main app screens
 import HomeScreen from '../screens/HomeScreen';
 import QuranScreen from '../screens/QuranScreen';
 import QuranReaderScreen from '../screens/QuranReaderScreen';
@@ -21,7 +24,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Welcome"
+        initialRouteName="Splash"
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',
@@ -29,6 +32,11 @@ export default function AppNavigator() {
         }}
       >
         {/* Onboarding */}
+        <Stack.Screen
+          name="Splash"
+          component={SplashScreen}
+          options={{ animation: 'fade' }}
+        />
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="LocationPermission" component={LocationPermissionScreen} />
         <Stack.Screen name="NotificationPermission" component={NotificationPermissionScreen} />

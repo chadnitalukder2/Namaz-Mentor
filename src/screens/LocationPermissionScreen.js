@@ -8,6 +8,9 @@ import {
 } from 'react-native';
 import { Colors, Fonts, Spacing } from '../constants/theme';
 import { PrimaryButton, GhostButton, DotIndicator } from '../components/UIComponents';
+import LocationPinIllustration from '../components/LocationPinIllustration';
+
+const H_PADDING = 20;
 
 export default function LocationPermissionScreen({ navigation }) {
   return (
@@ -15,15 +18,12 @@ export default function LocationPermissionScreen({ navigation }) {
       <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundDark} />
 
       <View style={styles.centerContent}>
-        <View style={styles.iconWrapper}>
-          <Text style={styles.icon}>📍</Text>
-        </View>
+        <LocationPinIllustration />
 
-        <View style={styles.textBlock}>
+        <View style={styles.copyBlock}>
           <Text style={styles.heading}>Enable Location</Text>
           <Text style={styles.subtitle}>
-            We use your location to calculate accurate prayer times,
-            Qibla direction, and local Islamic events.
+            We use your location to calculate accurate prayer times based on your area.
           </Text>
         </View>
       </View>
@@ -49,33 +49,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundDark,
-    paddingHorizontal: 20,
+    paddingHorizontal: H_PADDING,
   },
   centerContent: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.lg,
+    gap: 24,
   },
-  iconWrapper: {
-    width: 80,
-    height: 80,
+  copyBlock: {
+    width: '100%',
+    maxWidth: 350,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 40,
-  },
-  icon: {
-    fontSize: 40,
-  },
-  textBlock: {
-    gap: Spacing.md,
-    alignItems: 'center',
+    gap: 24,
   },
   heading: {
     ...Fonts.bold,
     fontSize: 30,
-    color: Colors.textLight,
+    lineHeight: 39,
+    color: Colors.textWarmCream,
     textAlign: 'center',
   },
   subtitle: {
@@ -84,10 +76,14 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     textAlign: 'center',
     lineHeight: 25.6,
+    paddingHorizontal: 8,
   },
   bottomSection: {
     paddingBottom: Spacing.xl,
     alignItems: 'center',
     gap: 16,
+    maxWidth: 350,
+    width: '100%',
+    alignSelf: 'center',
   },
 });

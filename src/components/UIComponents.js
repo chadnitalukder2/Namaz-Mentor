@@ -23,19 +23,33 @@ export const GhostButton = ({ title, onPress, style }) => (
 );
 
 // ─── Dot Indicator ───────────────────────────────────────────────
-export const DotIndicator = ({ total, active }) => (
-  <View style={styles.dotRow}>
-    {Array.from({ length: total }).map((_, i) => (
-      <View
-        key={i}
-        style={[
-          styles.dot,
-          i === active ? styles.dotActive : styles.dotInactive,
-        ]}
-      />
-    ))}
-  </View>
-);
+export const DotIndicator = ({ total, active }) => {
+  const inactiveIndices = [...Array(total).keys()]
+    .filter((i) => i !== active)
+    .sort((a, b) => a - b);
+  const inactiveColorByIndex = inactiveIndices.reduce((acc, idx, order) => {
+    acc[idx] = order === 0 ? Colors.dotInactiveDark : Colors.dotInactive;
+    return acc;
+  }, {});
+
+  return (
+    <View style={styles.dotRow}>
+      {Array.from({ length: total }).map((_, i) =>
+        i === active ? (
+          <View key={i} style={styles.dotActivePill} />
+        ) : (
+          <View
+            key={i}
+            style={[
+              styles.dotInactivePill,
+              { backgroundColor: inactiveColorByIndex[i] },
+            ]}
+          />
+        )
+      )}
+    </View>
+  );
+};
 
 // ─── Prayer Row Card ─────────────────────────────────────────────
 export const PrayerCard = ({ prayer, isNext }) => {
@@ -117,9 +131,9 @@ export const GoldText = ({ children, style }) => (
 const styles = StyleSheet.create({
   // Primary Button
   primaryBtn: {
-    backgroundColor: Colors.buttonLight,
+    backgroundColor: Colors.gold,
     height: 48,
-    borderRadius: Radius.md,
+    borderRadius: 60,
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
@@ -127,6 +141,7 @@ const styles = StyleSheet.create({
   primaryBtnText: {
     ...Fonts.semiBold,
     fontSize: 14,
+    lineHeight: 24,
     color: Colors.backgroundDark,
   },
 
@@ -144,17 +159,16 @@ const styles = StyleSheet.create({
     gap: 8,
     alignItems: 'center',
   },
-  dot: {
-    height: 8,
-    borderRadius: 100,
-  },
-  dotActive: {
+  dotActivePill: {
     width: 24,
-    backgroundColor: Colors.textWhite,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.dotActivePill,
   },
-  dotInactive: {
+  dotInactivePill: {
     width: 8,
-    backgroundColor: Colors.dotInactive,
+    height: 8,
+    borderRadius: 4,
   },
 
   // Prayer Card

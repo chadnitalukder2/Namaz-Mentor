@@ -5,33 +5,39 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
-  TouchableOpacity,
+  useWindowDimensions,
 } from 'react-native';
-import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
+import { Colors, Fonts, Spacing } from '../constants/theme';
 import { PrimaryButton, GhostButton, DotIndicator } from '../components/UIComponents';
+import WelcomeIllustration from '../components/WelcomeIllustration';
+
+const H_PADDING = 20;
+const ILLUSTRATION_ASPECT = 64 / 350;
 
 export default function WelcomeScreen({ navigation }) {
+  const { width: windowWidth } = useWindowDimensions();
+  const contentWidth = windowWidth - H_PADDING * 2;
+  const illustrationHeight = contentWidth * ILLUSTRATION_ASPECT;
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundDark} />
 
-      {/* Main content - centered */}
       <View style={styles.centerContent}>
-        {/* Logo / Icon */}
-        <View style={styles.iconWrapper}>
-          <Text style={styles.prayerEmoji}>🧎</Text>
+        <View style={styles.illustrationWrap}>
+          <WelcomeIllustration width={contentWidth} height={illustrationHeight} />
         </View>
 
-        {/* Heading */}
-        <Text style={styles.heading}>Your Daily Islamic{'\n'}Companion</Text>
-
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>
-          Accurate prayer times, Quran, Qibla and Dhikr{'\n'}— all in one calm space.
-        </Text>
+        <View style={styles.copyBlock}>
+          <Text style={styles.heading}>
+            Your Daily Islamic{'\n'}Companion
+          </Text>
+          <Text style={styles.subtitle}>
+            Accurate prayer times, Quran, Qibla and Dhikr — all in one calm space.
+          </Text>
+        </View>
       </View>
 
-      {/* Bottom CTA */}
       <View style={styles.bottomSection}>
         <PrimaryButton
           title="Get Started"
@@ -54,27 +60,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundDark,
-    paddingHorizontal: 20,
+    paddingHorizontal: H_PADDING,
   },
   centerContent: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.lg,
+    gap: 32,
   },
-  iconWrapper: {
-    width: 64,
-    height: 64,
+  illustrationWrap: {
+    width: '100%',
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  prayerEmoji: {
-    fontSize: 52,
+  copyBlock: {
+    width: '100%',
+    maxWidth: 350,
+    alignItems: 'center',
+    gap: 24,
   },
   heading: {
     ...Fonts.bold,
     fontSize: 30,
-    color: Colors.textLight,
+    color: Colors.textWarmCream,
     textAlign: 'center',
     lineHeight: 39,
   },
@@ -84,11 +91,15 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     textAlign: 'center',
     lineHeight: 25.6,
+    paddingHorizontal: 8,
   },
   bottomSection: {
     paddingBottom: Spacing.xl,
     alignItems: 'center',
     gap: 16,
+    maxWidth: 350,
+    width: '100%',
+    alignSelf: 'center',
   },
   ghostBtn: {
     paddingVertical: 4,
