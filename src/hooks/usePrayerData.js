@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import * as Location from 'expo-location';
 import {
   PRAYER_DEFINITIONS,
@@ -12,6 +12,7 @@ import {
   getNextPrayerAndTarget,
   normalizeFallbackRows,
 } from '../utils/prayerTimes';
+import { bearingToKaabaDeg, distanceToKaabaKm, turnHintFromHeading } from '../utils/qibla';
 
 /**
  * Loads today's timings from AlAdhan using device location (or fallback coordinates).
@@ -182,28 +183,105 @@ export function useTasbih(initialTarget = 33) {
 }
 
 /**
- * useQibla
- * In a real app, this uses device compass + calculated Qibla bearing.
- * Returns a static mock value for now.
+ * Device location + true/magnetic heading, Qibla bearing and distance to the Kaaba.
  */
 export function useQibla() {
-  const [qiblaDegrees] = useState(282); // mock: London facing roughly SW toward Makkah
-  const [compassHeading, setCompassHeading] = useState(0);
+  const [ready, setReady] = useState(false);
+  const [locationLabel, setLocationLabel] = useState(FALLBACK_LOCATION.name);
+  const [latitude, setLatitude] = useState(FALLBACK_LOCATION.latitude);
+  const [longitude, setLongitude] = useState(FALLBACK_LOCATION.longitude);
+  const [bearingDeg, setBearingDeg] = useState(() =>
+    bearingToKaabaDeg(FALLBACK_LOCATION.latitude, FALLBACK_LOCATION.longitude)
+  );
+  const [distanceKm, setDistanceKm] = useState(() =>
+    distanceToKaabaKm(FALLBACK_LOCATION.latitude, FALLBACK_LOCATION.longitude)
+  );
+  const [headingDeg, setHeadingDeg] = useState(null);
 
-  // Simulate compass rotation
+  const headingSubRef = useRef(null);
+
   useEffect(() => {
-    let angle = 0;
-    const interval = setInterval(() => {
-      angle = (angle + 0.5) % 360;
-      setCompassHeading(angle);
-    }, 50);
-    return () => clearInterval(interval);
+    let cancelled = false;
+
+    (async () => {
+      let lat = FALLBACK_LOCATION.latitude;
+      let lng = FALLBACK_LOCATION.longitude;
+      let label = FALLBACK_LOCATION.name;
+
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const pos = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          lat = pos.coords.latitude;
+          lng = pos.coords.longitude;
+          try {
+            const places = await Location.reverseGeocodeAsync({
+              latitude: lat,
+              longitude: lng,
+            });
+            const place = places[0];
+            if (place) {
+              const parts = [place.city || place.subregion, place.region, place.country].filter(
+                Boolean
+              );
+              label = parts.length ? parts.join(', ') : place.name || label;
+            } else {
+              label = `${lat.toFixed(2)}°, ${lng.toFixed(2)}°`;
+            }
+          } catch {
+            label = `${lat.toFixed(2)}°, ${lng.toFixed(2)}°`;
+          }
+
+          const sub = await Location.watchHeadingAsync((h) => {
+            const t = h.trueHeading;
+            const m = h.magHeading;
+            const v = t >= 0 ? t : m;
+            if (!cancelled && v != null && !Number.isNaN(v)) {
+              setHeadingDeg(v);
+            }
+          });
+          headingSubRef.current = sub;
+          if (cancelled && sub && typeof sub.remove === 'function') {
+            sub.remove();
+            headingSubRef.current = null;
+          }
+        }
+      } catch {
+        // fall back below
+      }
+
+      if (cancelled) return;
+      setLatitude(lat);
+      setLongitude(lng);
+      setLocationLabel(label);
+      setBearingDeg(bearingToKaabaDeg(lat, lng));
+      setDistanceKm(distanceToKaabaKm(lat, lng));
+      setReady(true);
+    })();
+
+    return () => {
+      cancelled = true;
+      const sub = headingSubRef.current;
+      if (sub && typeof sub.remove === 'function') {
+        sub.remove();
+      }
+      headingSubRef.current = null;
+    };
   }, []);
 
+  const turnHint = turnHintFromHeading(bearingDeg, headingDeg);
+
   return {
-    qiblaDegrees,
-    compassHeading,
-    distanceKm: 10247,
-    locationName: 'Makkah, Saudi Arabia',
+    ready,
+    locationLabel,
+    latitude,
+    longitude,
+    bearingDeg,
+    distanceKm,
+    headingDeg,
+    headingAvailable: headingDeg != null,
+    turnHint,
   };
 }

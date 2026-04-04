@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,67 +8,178 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
-import { AL_FATIHAH_AYAHS } from '../constants/data';
+import { AL_FATIHAH_AYAHS, SURAHS } from '../constants/data';
 
 export default function QuranReaderScreen({ navigation, route }) {
   const surah = route?.params?.surah || { id: 1, name: 'Al-Fatihah', translation: 'The Opening' };
-  const ayahs = surah.id === 1 ? AL_FATIHAH_AYAHS : AL_FATIHAH_AYAHS; // default to Al-Fatihah
+  const ayahs = surah.id === 1 ? AL_FATIHAH_AYAHS : AL_FATIHAH_AYAHS;
+
+  const meta = useMemo(() => SURAHS.find((s) => s.id === surah.id), [surah.id]);
+  const totalAyahs = meta?.ayahs ?? ayahs.length;
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [playing, setPlaying] = useState(false);
+
+  const progressPct = totalAyahs > 0 ? ((currentIndex + 1) / totalAyahs) * 100 : 0;
+
+  const goPrev = useCallback(() => {
+    setCurrentIndex((i) => Math.max(0, i - 1));
+  }, []);
+
+  const goNext = useCallback(() => {
+    setCurrentIndex((i) => Math.min(ayahs.length - 1, i + 1));
+  }, [ayahs.length]);
+
+  const togglePlay = useCallback(() => {
+    setPlaying((p) => !p);
+  }, []);
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundDark} />
 
       <SafeAreaView style={styles.safeArea}>
-        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation?.goBack()} style={styles.backBtn}>
-            <Text style={styles.backIcon}>‹</Text>
+          <TouchableOpacity
+            onPress={() => navigation?.goBack()}
+            style={styles.headerIconBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Ionicons name="chevron-back" size={26} color={Colors.textWhite} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <Text style={styles.surahTitle}>{surah.name}</Text>
-            <Text style={styles.surahSubtitle}>{surah.translation}</Text>
+            <Text style={styles.surahTitle} numberOfLines={1}>
+              {surah.name}
+            </Text>
+            <Text style={styles.surahSubtitle} numberOfLines={1}>
+              {surah.translation} · {totalAyahs} Ayahs
+            </Text>
           </View>
-          <TouchableOpacity style={styles.bookmarkBtn}>
-            <Text style={styles.bookmarkIcon}>🔖</Text>
+          <TouchableOpacity
+            style={styles.headerIconBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Bookmark"
+          >
+            <Ionicons name="bookmark-outline" size={22} color={Colors.gold} />
           </TouchableOpacity>
         </View>
 
-        {/* Ayahs */}
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {ayahs.map((ayah) => (
-            <View key={ayah.number} style={styles.ayahCard}>
-              {/* Ayah number badge */}
-              <View style={styles.ayahHeader}>
-                <View style={styles.ayahNumberBadge}>
-                  <Text style={styles.ayahNumberBadgeIcon}>📖</Text>
-                  <Text style={styles.ayahNumberText}>{ayah.number}</Text>
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
+        </View>
+
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {ayahs.map((ayah, index) => {
+            const isCurrent = index === currentIndex;
+            const CardInner = (
+              <View style={[styles.ayahCard, isCurrent && styles.ayahCardActive]}>
+                <View style={styles.ayahHeader}>
+                  <View style={styles.ayahNumberBadge}>
+                    <Ionicons name="book-outline" size={20} color={Colors.textMuted} />
+                    <Text style={styles.ayahNumberText}>{ayah.number}</Text>
+                  </View>
+                  <TouchableOpacity
+                    hitSlop={12}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Play ayah ${ayah.number}`}
+                  >
+                    <Ionicons name="volume-medium-outline" size={22} color={Colors.textGrey} />
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity>
-                  <Text style={styles.audioIcon}>🔊</Text>
-                </TouchableOpacity>
+                <Text style={styles.arabicText}>{ayah.arabic}</Text>
+                {ayah.transliteration ? (
+                  <Text style={styles.transliterationText}>{ayah.transliteration}</Text>
+                ) : null}
+                <Text style={styles.translationText}>{ayah.translation}</Text>
               </View>
+            );
 
-              {/* Arabic Text */}
-              <Text style={styles.arabicText}>{ayah.arabic}</Text>
-
-              {/* Translation */}
-              <Text style={styles.translationText}>{ayah.translation}</Text>
-            </View>
-          ))}
+            return (
+              <TouchableOpacity
+                key={ayah.number}
+                activeOpacity={0.92}
+                onPress={() => setCurrentIndex(index)}
+              >
+                {isCurrent ? (
+                  <LinearGradient
+                    colors={[Colors.goldStart, Colors.goldMid, Colors.goldEnd]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.ayahCardBorder}
+                  >
+                    {CardInner}
+                  </LinearGradient>
+                ) : (
+                  CardInner
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
-        {/* Bottom controls */}
-        <View style={styles.bottomControls}>
-          <TouchableOpacity style={styles.controlBtn}>
-            <Text style={styles.controlIcon}>⏮</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.controlBtnLarge}>
-            <Text style={styles.controlIconLarge}>▶</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.controlBtn}>
-            <Text style={styles.controlIcon}>⏭</Text>
-          </TouchableOpacity>
+        <View style={styles.bottomBar}>
+          <View style={styles.bottomMeta}>
+            <Text style={styles.bottomMetaLabel}>Ayah</Text>
+            <Text style={styles.bottomMetaValue}>
+              {ayahs[currentIndex]?.number ?? 1} / {totalAyahs}
+            </Text>
+          </View>
+          <View style={styles.bottomControls}>
+            <TouchableOpacity
+              style={styles.controlBtn}
+              onPress={goPrev}
+              disabled={currentIndex <= 0}
+              accessibilityRole="button"
+              accessibilityLabel="Previous ayah"
+            >
+              <Ionicons
+                name="play-skip-back"
+                size={22}
+                color={currentIndex <= 0 ? Colors.dotInactiveDark : Colors.textMuted}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={togglePlay}
+              accessibilityRole="button"
+              accessibilityLabel={playing ? 'Pause' : 'Play'}
+            >
+              <LinearGradient
+                colors={[Colors.goldStart, Colors.goldMid, Colors.goldEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.playOuter}
+              >
+                <View style={styles.playInner}>
+                  <Ionicons
+                    name={playing ? 'pause' : 'play'}
+                    size={26}
+                    color={Colors.textWhite}
+                    style={playing ? undefined : { marginLeft: 3 }}
+                  />
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.controlBtn}
+              onPress={goNext}
+              disabled={currentIndex >= ayahs.length - 1}
+              accessibilityRole="button"
+              accessibilityLabel="Next ayah"
+            >
+              <Ionicons
+                name="play-skip-forward"
+                size={22}
+                color={currentIndex >= ayahs.length - 1 ? Colors.dotInactiveDark : Colors.textMuted}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       </SafeAreaView>
     </View>
@@ -86,57 +197,67 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm + 4,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.07)',
+    borderBottomColor: Colors.separator,
   },
-  backBtn: {
-    width: 32,
-    height: 32,
+  headerIconBtn: {
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 32,
-    color: Colors.textWhite,
-    lineHeight: 32,
-    marginTop: -6,
   },
   headerCenter: {
     flex: 1,
     alignItems: 'center',
+    paddingHorizontal: Spacing.sm,
   },
   surahTitle: {
     ...Fonts.bold,
-    fontSize: 20,
+    fontSize: 18,
     color: Colors.textWhite,
   },
   surahSubtitle: {
     ...Fonts.regular,
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.textMuted,
     marginTop: 2,
   },
-  bookmarkBtn: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
+
+  progressTrack: {
+    marginHorizontal: Spacing.md,
+    marginTop: Spacing.sm,
+    height: 3,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 2,
+    overflow: 'hidden',
   },
-  bookmarkIcon: { fontSize: 18 },
+  progressFill: {
+    height: 3,
+    backgroundColor: Colors.gold,
+    borderRadius: 2,
+  },
 
   scrollContent: {
-    padding: 20,
-    gap: 12,
-    paddingBottom: 20,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
+    gap: Spacing.sm + 4,
+    paddingBottom: Spacing.lg,
   },
 
+  ayahCardBorder: {
+    borderRadius: Radius.md + 2,
+    padding: 2,
+  },
   ayahCard: {
     backgroundColor: Colors.backgroundMedium,
     borderRadius: Radius.md,
-    padding: 16,
-    gap: 12,
+    padding: Spacing.md,
+    gap: Spacing.sm + 4,
+  },
+  ayahCardActive: {
+    backgroundColor: Colors.backgroundCard,
   },
   ayahHeader: {
     flexDirection: 'row',
@@ -144,33 +265,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   ayahNumberBadge: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     backgroundColor: Colors.backgroundDark,
-    borderRadius: Radius.sm,
+    borderRadius: Radius.sm + 2,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
   },
-  ayahNumberBadgeIcon: { fontSize: 18 },
   ayahNumberText: {
     position: 'absolute',
-    bottom: 2,
-    right: 3,
+    bottom: 3,
+    right: 4,
     ...Fonts.bold,
     fontSize: 9,
     color: Colors.gold,
   },
-  audioIcon: { fontSize: 18 },
 
   arabicText: {
     ...Fonts.regular,
-    fontSize: 22,
-    color: Colors.textWhite,
+    fontSize: 23,
+    color: Colors.textWarmCream,
     textAlign: 'right',
     lineHeight: 40,
-    fontFamily: 'System', // Should be an Arabic font in production
     letterSpacing: 0.5,
+  },
+  transliterationText: {
+    ...Fonts.regular,
+    fontSize: 13,
+    fontStyle: 'italic',
+    color: Colors.textMuted,
+    lineHeight: 20,
   },
   translationText: {
     ...Fonts.regular,
@@ -179,35 +303,58 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
 
+  bottomBar: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.separator,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    backgroundColor: Colors.backgroundDark,
+  },
+  bottomMeta: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'baseline',
+    gap: 6,
+    marginBottom: Spacing.sm,
+  },
+  bottomMetaLabel: {
+    ...Fonts.medium,
+    fontSize: 12,
+    color: Colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  bottomMetaValue: {
+    ...Fonts.semiBold,
+    fontSize: 14,
+    color: Colors.textWhite,
+  },
   bottomControls: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 16,
-    gap: 24,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.07)',
+    gap: Spacing.lg + 8,
   },
   controlBtn: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  controlIcon: {
-    fontSize: 20,
-    color: Colors.textMuted,
+  playOuter: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  controlBtnLarge: {
+  playInner: {
     width: 52,
     height: 52,
-    backgroundColor: Colors.backgroundBlue,
     borderRadius: 26,
+    backgroundColor: Colors.backgroundBlue,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  controlIconLarge: {
-    fontSize: 22,
-    color: Colors.textWhite,
   },
 });
