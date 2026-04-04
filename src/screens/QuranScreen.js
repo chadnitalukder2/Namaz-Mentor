@@ -309,6 +309,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.md,
+    padding: '20px',
   },
 
   continueCard: {
