@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,57 +8,157 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
-import { SURAHS } from '../constants/data';
+import { SURAHS as FALLBACK_SURAHS } from '../constants/data';
+import { JUZ_FIRST_SURAH_NUMBER } from '../constants/quranJuz';
+import { fetchAllSurahs } from '../services/quranApi';
+import { getQuranProgress } from '../utils/quranProgress';
 import MainTabBar from '../components/MainTabBar';
 
 export default function QuranScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('surah');
   const [search, setSearch] = useState('');
+  const [surahs, setSurahs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
+  const [progress, setProgress] = useState(null);
 
-  const filtered = SURAHS.filter(
-    (s) =>
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.translation.toLowerCase().includes(search.toLowerCase())
+  const loadSurahs = useCallback(async () => {
+    setError(null);
+    try {
+      const list = await fetchAllSurahs();
+      setSurahs(list);
+    } catch (e) {
+      setError(e?.message || 'Something went wrong');
+      setSurahs((prev) => (prev.length > 0 ? prev : FALLBACK_SURAHS));
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSurahs();
+  }, [loadSurahs]);
+
+  const reloadProgress = useCallback(async () => {
+    const p = await getQuranProgress();
+    setProgress(p);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      reloadProgress();
+    }, [reloadProgress])
   );
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadSurahs();
+  }, [loadSurahs]);
+
+  const continueMeta = useMemo(() => {
+    if (!progress || surahs.length === 0) return null;
+    const surah = surahs.find((s) => s.id === progress.surahNumber);
+    if (!surah) return null;
+    const ayah = Math.min(Math.max(1, progress.ayahNumber), surah.ayahs);
+    const pct = surah.ayahs > 0 ? (ayah / surah.ayahs) * 100 : 0;
+    return { surah, ayah, pct };
+  }, [progress, surahs]);
+
+  const filteredSurahs = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return surahs;
+    return surahs.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        s.translation.toLowerCase().includes(q) ||
+        String(s.id).includes(q)
+    );
+  }, [surahs, search]);
+
+  const juzRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return JUZ_FIRST_SURAH_NUMBER.map((startSurahId, index) => {
+      const juzNum = index + 1;
+      const startSurah = surahs.find((s) => s.id === startSurahId);
+      const subtitle = startSurah
+        ? `Starts at ${startSurah.name}`
+        : `Surah ${startSurahId}`;
+      return { juzNum, startSurahId, startSurah, subtitle };
+    }).filter((row) => {
+      if (!q) return true;
+      if (`juz ${row.juzNum}`.includes(q)) return true;
+      if (String(row.juzNum).includes(q)) return true;
+      if (row.startSurah?.name?.toLowerCase().includes(q)) return true;
+      if (row.startSurah?.translation?.toLowerCase().includes(q)) return true;
+      return false;
+    });
+  }, [surahs, search]);
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundDark} />
 
       <SafeAreaView style={styles.safeArea}>
-        {/* Continue Reading Banner */}
-        <View style={styles.continueCard}>
-          <View style={styles.continueLeft}>
-            <Text style={styles.continueIcon}>📖</Text>
-            <View>
-              <Text style={styles.continueTitle}>Continue Reading</Text>
-              <Text style={styles.continueSurah}>Surah Al-Kahf</Text>
-              <Text style={styles.continueAyah}>Ayah 45 of 110</Text>
-            </View>
-          </View>
+        {continueMeta ? (
           <TouchableOpacity
-            style={styles.continueArrow}
-            onPress={() => navigation?.navigate('QuranReader', { surah: { id: 18, name: 'Al-Kahf' } })}
+            activeOpacity={0.85}
+            style={styles.continueCard}
+            onPress={() =>
+              navigation?.navigate('QuranReader', {
+                surah: {
+                  id: continueMeta.surah.id,
+                  name: continueMeta.surah.name,
+                  translation: continueMeta.surah.translation,
+                  ayahs: continueMeta.surah.ayahs,
+                },
+                initialAyah: continueMeta.ayah,
+              })
+            }
           >
-            <Text style={styles.arrowIcon}>›</Text>
+            <View style={styles.continueTopRow}>
+              <View style={styles.continueLeft}>
+                <View style={styles.continueIconWrap}>
+                  <Ionicons name="book-outline" size={22} color={Colors.gold} />
+                </View>
+                <View style={styles.continueTextCol}>
+                  <Text style={styles.continueTitle}>Continue Reading</Text>
+                  <Text style={styles.continueSurah} numberOfLines={1}>
+                    Surah {continueMeta.surah.name}
+                  </Text>
+                  <Text style={styles.continueAyah}>
+                    Ayah {continueMeta.ayah} of {continueMeta.surah.ayahs}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.continueChevron}>
+                <Ionicons name="chevron-forward" size={22} color={Colors.textMuted} />
+              </View>
+            </View>
+            <View style={styles.progressBarBg}>
+              <View style={[styles.progressBarFill, { width: `${continueMeta.pct}%` }]} />
+            </View>
           </TouchableOpacity>
-          {/* Progress Bar */}
-          <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { width: '41%' }]} />
-          </View>
-        </View>
+        ) : null}
 
         {/* Search Bar */}
         <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Ionicons name="search" size={18} color={Colors.textMuted} />
           <TextInput
             placeholder="Search Surah..."
             placeholderTextColor={Colors.textMuted}
             style={styles.searchInput}
             value={search}
             onChangeText={setSearch}
+            autoCorrect={false}
+            autoCapitalize="none"
           />
         </View>
 
@@ -82,36 +182,117 @@ export default function QuranScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Surah List */}
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.surahList}
-        >
-          {filtered.map((surah) => (
-            <TouchableOpacity
-              key={surah.id}
-              style={styles.surahRow}
-              activeOpacity={0.7}
-              onPress={() => navigation?.navigate('QuranReader', { surah })}
-            >
-              {/* Number badge */}
-              <View style={styles.numberBadge}>
-                <Text style={styles.numberIcon}>📖</Text>
-                <Text style={styles.surahNumber}>{surah.id}</Text>
-              </View>
-              {/* Name */}
-              <View style={styles.surahInfo}>
-                <Text style={styles.surahName}>{surah.name}</Text>
-                <Text style={styles.surahTranslation}>{surah.translation}</Text>
-              </View>
-              {/* Ayahs count */}
-              <Text style={styles.ayahCount}>{surah.ayahs} Ayahs</Text>
+        {error && surahs.length > 0 && surahs === FALLBACK_SURAHS && !loading ? (
+          <View style={styles.bannerRow}>
+            <Ionicons name="cloud-offline-outline" size={18} color={Colors.textMuted} />
+            <Text style={styles.bannerText}>Showing offline list. </Text>
+            <TouchableOpacity onPress={loadSurahs} hitSlop={8}>
+              <Text style={styles.bannerLink}>Retry</Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
+          </View>
+        ) : null}
+
+        {loading && surahs.length === 0 ? (
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color={Colors.gold} />
+            <Text style={styles.loadingHint}>Loading surahs…</Text>
+          </View>
+        ) : null}
+
+        {!loading && error && surahs.length === 0 ? (
+          <View style={styles.centered}>
+            <Ionicons name="alert-circle-outline" size={40} color={Colors.textMuted} />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryBtn} onPress={loadSurahs}>
+              <Text style={styles.retryBtnText}>Try again</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {/* Lists */}
+        {!loading || surahs.length > 0 ? (
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.surahList}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={Colors.gold}
+                colors={[Colors.gold]}
+              />
+            }
+          >
+            {activeTab === 'surah'
+              ? filteredSurahs.map((surah) => (
+                  <TouchableOpacity
+                    key={surah.id}
+                    style={styles.surahRow}
+                    activeOpacity={0.7}
+                    onPress={() =>
+                      navigation?.navigate('QuranReader', {
+                        surah: {
+                          id: surah.id,
+                          name: surah.name,
+                          translation: surah.translation,
+                          ayahs: surah.ayahs,
+                        },
+                      })
+                    }
+                  >
+                    <View style={styles.numberBadge}>
+                      <Ionicons name="book-outline" size={20} color={Colors.textMuted} />
+                      <Text style={styles.surahNumber}>{surah.id}</Text>
+                    </View>
+                    <View style={styles.surahInfo}>
+                      <Text style={styles.surahName}>{surah.name}</Text>
+                      <Text style={styles.surahTranslation} numberOfLines={1}>
+                        {surah.translation}
+                      </Text>
+                    </View>
+                    <Text style={styles.ayahCount}>{surah.ayahs} Ayahs</Text>
+                  </TouchableOpacity>
+                ))
+              : juzRows.map((row) => (
+                  <TouchableOpacity
+                    key={row.juzNum}
+                    style={styles.surahRow}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      const s =
+                        row.startSurah ||
+                        surahs.find((x) => x.id === row.startSurahId) || {
+                          id: row.startSurahId,
+                          name: `Surah ${row.startSurahId}`,
+                          translation: '',
+                        };
+                      navigation?.navigate('QuranReader', {
+                        surah: {
+                          id: s.id,
+                          name: s.name,
+                          translation: s.translation,
+                          ayahs: s.ayahs,
+                        },
+                      });
+                    }}
+                  >
+                    <View style={styles.numberBadge}>
+                      <Ionicons name="albums-outline" size={20} color={Colors.textMuted} />
+                      <Text style={styles.surahNumber}>{row.juzNum}</Text>
+                    </View>
+                    <View style={styles.surahInfo}>
+                      <Text style={styles.surahName}>Juz {row.juzNum}</Text>
+                      <Text style={styles.surahTranslation} numberOfLines={1}>
+                        {row.subtitle}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+                  </TouchableOpacity>
+                ))}
+          </ScrollView>
+        ) : null}
       </SafeAreaView>
 
-      {/* Tab Bar */}
       <View style={styles.tabBarWrapper}>
         <MainTabBar activeTab="quran" navigation={navigation} />
       </View>
@@ -126,53 +307,66 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
   },
 
-  // Continue Reading
   continueCard: {
     backgroundColor: Colors.backgroundMedium,
     borderRadius: Radius.md,
-    padding: 16,
-    marginBottom: 16,
-    overflow: 'hidden',
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.separator,
+  },
+  continueTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   continueLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    flex: 1,
+    gap: Spacing.sm + 4,
   },
-  continueIcon: { fontSize: 20 },
+  continueIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.sm + 2,
+    backgroundColor: Colors.backgroundDark,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  continueTextCol: { flex: 1 },
   continueTitle: {
     ...Fonts.medium,
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.textGrey,
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   continueSurah: {
     ...Fonts.bold,
     fontSize: 16,
     color: Colors.textWhite,
+    marginTop: 4,
   },
   continueAyah: {
     ...Fonts.regular,
     fontSize: 13,
     color: Colors.textMuted,
+    marginTop: 2,
   },
-  continueArrow: {
-    position: 'absolute',
-    right: 16,
-    top: '50%',
-  },
-  arrowIcon: {
-    fontSize: 24,
-    color: Colors.textMuted,
+  continueChevron: {
+    marginLeft: Spacing.sm,
   },
   progressBarBg: {
-    marginTop: 12,
+    marginTop: Spacing.md - 4,
     height: 4,
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 2,
+    overflow: 'hidden',
   },
   progressBarFill: {
     height: 4,
@@ -180,30 +374,30 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
 
-  // Search
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.backgroundMedium,
     borderRadius: Radius.md,
-    paddingHorizontal: 14,
+    paddingHorizontal: Spacing.md - 2,
     paddingVertical: 12,
     gap: 10,
-    marginBottom: 16,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.separator,
   },
-  searchIcon: { fontSize: 16 },
   searchInput: {
     flex: 1,
     ...Fonts.regular,
     fontSize: 14,
     color: Colors.textWhite,
+    paddingVertical: 0,
   },
 
-  // Filter tabs
   filterRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   filterBtn: {
     paddingHorizontal: 20,
@@ -223,10 +417,60 @@ const styles = StyleSheet.create({
     color: Colors.textWhite,
   },
 
-  // Surah list
+  bannerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginBottom: Spacing.sm,
+    gap: 4,
+  },
+  bannerText: {
+    ...Fonts.regular,
+    fontSize: 13,
+    color: Colors.textMuted,
+  },
+  bannerLink: {
+    ...Fonts.semiBold,
+    fontSize: 13,
+    color: Colors.gold,
+  },
+
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  loadingHint: {
+    ...Fonts.regular,
+    fontSize: 14,
+    color: Colors.textMuted,
+    marginTop: Spacing.sm,
+  },
+  errorText: {
+    ...Fonts.regular,
+    fontSize: 14,
+    color: Colors.textGrey,
+    textAlign: 'center',
+  },
+  retryBtn: {
+    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm + 2,
+    borderRadius: Radius.round,
+    backgroundColor: Colors.backgroundBlue,
+  },
+  retryBtnText: {
+    ...Fonts.semiBold,
+    fontSize: 14,
+    color: Colors.textWhite,
+  },
+
   surahList: {
     gap: 2,
-    paddingBottom: 16,
+    paddingBottom: Spacing.md,
+    flexGrow: 1,
   },
   surahRow: {
     flexDirection: 'row',
@@ -235,7 +479,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.05)',
-    gap: 12,
+    gap: Spacing.sm + 4,
   },
   numberBadge: {
     width: 46,
@@ -244,9 +488,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
   },
-  numberIcon: { fontSize: 20 },
   surahNumber: {
     position: 'absolute',
     bottom: 2,
@@ -271,5 +513,9 @@ const styles = StyleSheet.create({
     ...Fonts.regular,
     fontSize: 13,
     color: Colors.textMuted,
+  },
+
+  tabBarWrapper: {
+    backgroundColor: Colors.backgroundDark,
   },
 });

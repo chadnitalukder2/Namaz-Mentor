@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,23 +7,132 @@ import {
   StatusBar,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
 import { AL_FATIHAH_AYAHS, SURAHS } from '../constants/data';
+import { fetchSurahAudioUrls } from '../services/quranApi';
+import { saveQuranProgress } from '../utils/quranProgress';
 
 export default function QuranReaderScreen({ navigation, route }) {
   const surah = route?.params?.surah || { id: 1, name: 'Al-Fatihah', translation: 'The Opening' };
+  const initialAyah = route?.params?.initialAyah;
   const ayahs = surah.id === 1 ? AL_FATIHAH_AYAHS : AL_FATIHAH_AYAHS;
 
   const meta = useMemo(() => SURAHS.find((s) => s.id === surah.id), [surah.id]);
-  const totalAyahs = meta?.ayahs ?? ayahs.length;
+  const totalAyahs = surah.ayahs ?? meta?.ayahs ?? ayahs.length;
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [audioUrls, setAudioUrls] = useState([]);
+  const [audioLoading, setAudioLoading] = useState(true);
+  const [audioError, setAudioError] = useState(null);
+  const soundRef = useRef(null);
 
   const progressPct = totalAyahs > 0 ? ((currentIndex + 1) / totalAyahs) * 100 : 0;
+  const canPlayAudio = audioUrls.length > 0 && !audioLoading;
+
+  useEffect(() => {
+    if (initialAyah != null && initialAyah >= 1) {
+      setCurrentIndex(Math.min(Math.max(0, initialAyah - 1), ayahs.length - 1));
+    } else {
+      setCurrentIndex(0);
+    }
+  }, [surah.id, initialAyah, ayahs.length]);
+
+  useEffect(() => {
+    saveQuranProgress({ surahNumber: surah.id, ayahNumber: currentIndex + 1 });
+  }, [surah.id, currentIndex]);
+
+  useEffect(() => {
+    Audio.setAudioModeAsync({
+      playsInSilentModeIOS: true,
+      allowsRecordingIOS: false,
+      staysActiveInBackground: false,
+      shouldDuckAndroid: true,
+      playThroughEarpieceAndroid: false,
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    setPlaying(false);
+    let cancelled = false;
+    setAudioLoading(true);
+    setAudioError(null);
+    setAudioUrls([]);
+    (async () => {
+      try {
+        const urls = await fetchSurahAudioUrls(surah.id);
+        if (!cancelled) setAudioUrls(urls);
+      } catch (e) {
+        if (!cancelled) {
+          setAudioError(e?.message || 'Audio unavailable');
+          setAudioUrls([]);
+        }
+      } finally {
+        if (!cancelled) setAudioLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [surah.id]);
+
+  const stopAndUnloadSound = useCallback(async () => {
+    const s = soundRef.current;
+    soundRef.current = null;
+    if (!s) return;
+    try {
+      await s.stopAsync();
+    } catch {}
+    try {
+      await s.unloadAsync();
+    } catch {}
+  }, []);
+
+  const startPlaybackAt = useCallback(
+    async (index) => {
+      await stopAndUnloadSound();
+      const idx = Math.min(Math.max(0, index), audioUrls.length - 1);
+      const uri = audioUrls[idx];
+      if (!uri) {
+        setPlaying(false);
+        return;
+      }
+      try {
+        const { sound } = await Audio.Sound.createAsync(
+          { uri },
+          { shouldPlay: true },
+          (status) => {
+            if (status.isLoaded && status.didJustFinish) {
+              setPlaying(false);
+            }
+          }
+        );
+        soundRef.current = sound;
+      } catch {
+        setPlaying(false);
+      }
+    },
+    [audioUrls, stopAndUnloadSound]
+  );
+
+  useEffect(() => {
+    if (!playing) {
+      stopAndUnloadSound();
+      return;
+    }
+    startPlaybackAt(currentIndex);
+  }, [playing, currentIndex, audioUrls, startPlaybackAt, stopAndUnloadSound]);
+
+  useEffect(() => {
+    return () => {
+      stopAndUnloadSound();
+    };
+  }, [stopAndUnloadSound]);
 
   const goPrev = useCallback(() => {
     setCurrentIndex((i) => Math.max(0, i - 1));
@@ -34,8 +143,18 @@ export default function QuranReaderScreen({ navigation, route }) {
   }, [ayahs.length]);
 
   const togglePlay = useCallback(() => {
+    if (!canPlayAudio) return;
     setPlaying((p) => !p);
-  }, []);
+  }, [canPlayAudio]);
+
+  const playAyahAt = useCallback(
+    (index) => {
+      if (!canPlayAudio) return;
+      setCurrentIndex(index);
+      setPlaying(true);
+    },
+    [canPlayAudio]
+  );
 
   return (
     <View style={styles.container}>
@@ -57,6 +176,7 @@ export default function QuranReaderScreen({ navigation, route }) {
             </Text>
             <Text style={styles.surahSubtitle} numberOfLines={1}>
               {surah.translation} · {totalAyahs} Ayahs
+              {audioLoading ? ' · Loading audio…' : audioError ? ` · ${audioError}` : ''}
             </Text>
           </View>
           <TouchableOpacity
@@ -89,8 +209,14 @@ export default function QuranReaderScreen({ navigation, route }) {
                     hitSlop={12}
                     accessibilityRole="button"
                     accessibilityLabel={`Play ayah ${ayah.number}`}
+                    onPress={() => playAyahAt(index)}
+                    disabled={!canPlayAudio}
                   >
-                    <Ionicons name="volume-medium-outline" size={22} color={Colors.textGrey} />
+                    <Ionicons
+                      name="volume-medium-outline"
+                      size={22}
+                      color={!canPlayAudio ? Colors.dotInactiveDark : Colors.textGrey}
+                    />
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.arabicText}>{ayah.arabic}</Text>
@@ -149,20 +275,29 @@ export default function QuranReaderScreen({ navigation, route }) {
               onPress={togglePlay}
               accessibilityRole="button"
               accessibilityLabel={playing ? 'Pause' : 'Play'}
+              disabled={!canPlayAudio}
             >
               <LinearGradient
-                colors={[Colors.goldStart, Colors.goldMid, Colors.goldEnd]}
+                colors={
+                  canPlayAudio
+                    ? [Colors.goldStart, Colors.goldMid, Colors.goldEnd]
+                    : [Colors.dotInactiveDark, Colors.dotInactiveDark, Colors.dotInactiveDark]
+                }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.playOuter}
               >
                 <View style={styles.playInner}>
-                  <Ionicons
-                    name={playing ? 'pause' : 'play'}
-                    size={26}
-                    color={Colors.textWhite}
-                    style={playing ? undefined : { marginLeft: 3 }}
-                  />
+                  {audioLoading ? (
+                    <ActivityIndicator color={Colors.textWhite} size="small" />
+                  ) : (
+                    <Ionicons
+                      name={playing ? 'pause' : 'play'}
+                      size={26}
+                      color={Colors.textWhite}
+                      style={playing ? undefined : { marginLeft: 3 }}
+                    />
+                  )}
                 </View>
               </LinearGradient>
             </TouchableOpacity>
