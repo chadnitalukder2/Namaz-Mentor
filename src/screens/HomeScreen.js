@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
@@ -18,11 +19,16 @@ import SettingsGearIllustration from '../components/SettingsGearIllustration';
 import MainTabBar from '../components/MainTabBar';
 import { usePrayerTimes, useCountdownToDate } from '../hooks/usePrayerData';
 
+const TOP_SECTION_PADDING = 16; 
+
 export default function HomeScreen({ navigation }) {
   const { prayers, nextPrayer, nextPrayerAt, locationLabel, loading } = usePrayerTimes();
   const countdown = useCountdownToDate(nextPrayerAt);
   const { width } = useWindowDimensions();
   const isCompact = width < 360;
+  const locationMaxWidth = Math.max(130, width - 170);
+  const androidTopInset =
+    Platform.OS === 'android' ? Math.max(StatusBar.currentHeight || 0, 24) : 0;
   const countdownSize = width < 340 ? 28 : width < 390 ? 34 : 40;
   const prayerNameSize = width < 340 ? 28 : width < 390 ? 31 : 34;
 
@@ -40,16 +46,26 @@ export default function HomeScreen({ navigation }) {
         backgroundColor={Colors.backgroundBlue}
       />
 
-      <SafeAreaView style={styles.safeTop}>
+      <SafeAreaView
+        style={[
+          styles.safeTop,
+          isCompact && styles.safeTopCompact,
+          androidTopInset > 0 && { paddingTop: TOP_SECTION_PADDING + androidTopInset },
+        ]}
+      >
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerInfo}>
             <Text style={styles.dateText}>{dateString}</Text>
-            <View style={styles.locationPill}>
+            <View style={[styles.locationPill, isCompact && styles.locationPillCompact]}>
               <LocationPinIllustration
                 size={20}
                 centerFill={Colors.backgroundBlue}
               />
-              <Text style={styles.locationText} numberOfLines={1} ellipsizeMode="tail">
+              <Text
+                style={[styles.locationText, { maxWidth: locationMaxWidth }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {locationLabel || 'Finding location...'}
               </Text>
               {loading ? (
@@ -62,7 +78,7 @@ export default function HomeScreen({ navigation }) {
             </View>
           </View>
           <TouchableOpacity
-            style={styles.settingsBtn}
+            style={[styles.settingsBtn, isCompact && styles.settingsBtnCompact]}
             onPress={() => navigation?.navigate('Settings')}
             accessibilityRole="button"
             accessibilityLabel="Open settings"
@@ -130,13 +146,20 @@ const styles = StyleSheet.create({
   safeTop: {
     backgroundColor: Colors.backgroundBlue,
     paddingHorizontal: Spacing.lg,
+    paddingTop: TOP_SECTION_PADDING,
     paddingBottom: Spacing.md,
+  },
+  safeTopCompact: {
+    paddingHorizontal: Spacing.md,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    paddingTop: Spacing.sm,
+  },
+  headerInfo: {
+    flex: 1,
+    marginRight: Spacing.sm,
   },
   dateText: {
     ...Fonts.medium,
@@ -150,6 +173,7 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 10,
     alignSelf: 'flex-start',
+    maxWidth: '100%',
     backgroundColor: 'rgba(23, 68, 108, 0.55)',
     paddingVertical: 6,
     paddingRight: 14,
@@ -158,11 +182,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
   },
+  locationPillCompact: {
+    paddingRight: 10,
+    paddingLeft: 7,
+  },
   locationText: {
     ...Fonts.semiBold,
     fontSize: 15,
     color: Colors.textWhite,
-    maxWidth: 220,
     flexShrink: 1,
   },
   locationSpinner: {
@@ -177,6 +204,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'transparent',
+  },
+  settingsBtnCompact: {
+    width: 40,
+    height: 40,
   },
 
   hero: {
