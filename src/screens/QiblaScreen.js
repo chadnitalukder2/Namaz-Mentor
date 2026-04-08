@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -92,13 +93,13 @@ function KaabaCenterMark({ size = 40 }) {
   );
 }
 
-function QiblaCompass({ bearingDeg, headingDeg }) {
+function QiblaCompass({ bearingDeg, headingDeg, scale = 1 }) {
   const dialRotate = headingDeg != null ? -headingDeg : 0;
   const tickCount = 72;
   const r = COMPASS_INNER / 2 - 8;
 
   return (
-    <View style={compassStyles.root}>
+    <View style={[compassStyles.root, scale !== 1 && { transform: [{ scale }] }]}>
       <LinearGradient
         colors={[Colors.goldStart, Colors.goldMid, Colors.goldEnd]}
         start={{ x: 0, y: 0 }}
@@ -263,6 +264,11 @@ export default function QiblaScreen({ navigation }) {
     headingAvailable,
     turnHint,
   } = useQibla();
+  const { width } = useWindowDimensions();
+  const isCompact = width < 380;
+  const isSmall = width < 340;
+  const compassScale = isSmall ? 0.76 : isCompact ? 0.88 : 1;
+  const compassStageMinHeight = Math.round(320 * compassScale) + 28;
   const formattedDistance = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 0,
   }).format(Math.round(distanceKm));
@@ -274,9 +280,9 @@ export default function QiblaScreen({ navigation }) {
       <SafeAreaView style={styles.safeTop}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.screenTitle}>Qibla</Text>
+            <Text style={[styles.screenTitle, isCompact && styles.screenTitleCompact]}>Qibla</Text>
             <Text style={styles.screenTagline}>Sacred direction</Text>
-            <View style={styles.locationPill}>
+            <View style={[styles.locationPill, isCompact && styles.locationPillCompact]}>
               <LocationPinIllustration size={20} centerFill={Colors.backgroundBlue} />
               <Text style={styles.locationText} numberOfLines={1}>
                 {!ready ? 'Locating…' : locationLabel}
@@ -299,38 +305,40 @@ export default function QiblaScreen({ navigation }) {
         <View style={styles.sheetHandle} />
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, isCompact && styles.scrollContentCompact]}
           showsVerticalScrollIndicator={false}
           bounces
         >
-          <View style={styles.compassStage}>
+          <View style={[styles.compassStage, { minHeight: compassStageMinHeight }, isCompact && styles.compassStageCompact]}>
             <CompassGlow />
-            <QiblaCompass bearingDeg={bearingDeg} headingDeg={headingDeg} />
+            <QiblaCompass bearingDeg={bearingDeg} headingDeg={headingDeg} scale={compassScale} />
           </View>
 
-          <View style={styles.bearingBlock}>
+          <View style={[styles.bearingBlock, isCompact && styles.bearingBlockCompact]}>
             <LinearGradient
               colors={[Colors.goldStart, Colors.goldMid, Colors.goldEnd]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.degreeDegBorder}
             >
-              <View style={styles.degreeDegInner}>
-                <Text style={styles.degreeValue}>{Math.round(bearingDeg)}°</Text>
+              <View style={[styles.degreeDegInner, isCompact && styles.degreeDegInnerCompact]}>
+                <Text style={[styles.degreeValue, isCompact && styles.degreeValueCompact]}>
+                  {Math.round(bearingDeg)}°
+                </Text>
                 <Text style={styles.degreeCaption}>to Qibla</Text>
               </View>
             </LinearGradient>
           </View>
 
-          <View style={styles.hintPanel}>
+          <View style={[styles.hintPanel, isCompact && styles.hintPanelCompact]}>
             <View style={styles.hintIconCircle}>
               <Ionicons name={turnHint.ionicon} size={22} color={Colors.gold} />
             </View>
-            <Text style={styles.hintTitle}>{turnHint.line1}</Text>
-            <Text style={styles.hintSub}>{turnHint.line2}</Text>
+            <Text style={[styles.hintTitle, isCompact && styles.hintTitleCompact]}>{turnHint.line1}</Text>
+            <Text style={[styles.hintSub, isCompact && styles.hintSubCompact]}>{turnHint.line2}</Text>
           </View>
 
-          <View style={styles.infoCard}>
+          <View style={[styles.infoCard, isCompact && styles.infoCardCompact]}>
             <LinearGradient
               colors={['rgba(249, 201, 113, 0.18)', 'rgba(92, 60, 1, 0.08)']}
               start={{ x: 0, y: 0 }}
@@ -343,7 +351,9 @@ export default function QiblaScreen({ navigation }) {
               </View>
               <View style={styles.infoCardMid}>
                 <Text style={styles.infoCardTitle}>Distance to Makkah</Text>
-                <Text style={styles.distanceKm}>{formattedDistance} km</Text>
+                <Text style={[styles.distanceKm, isCompact && styles.distanceKmCompact]}>
+                  {formattedDistance} km
+                </Text>
               </View>
             </View>
             <View style={styles.infoFoot}>
@@ -395,6 +405,10 @@ const styles = StyleSheet.create({
     color: Colors.textWhite,
     letterSpacing: -0.5,
   },
+  screenTitleCompact: {
+    fontSize: 24,
+    letterSpacing: -0.3,
+  },
   screenTagline: {
     ...Fonts.regular,
     fontSize: 13,
@@ -415,6 +429,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     maxWidth: '100%',
+  },
+  locationPillCompact: {
+    marginTop: 10,
+    paddingRight: 12,
   },
   locationText: {
     ...Fonts.semiBold,
@@ -457,6 +475,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.md,
   },
+  scrollContentCompact: {
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.lg,
+  },
   compassStage: {
     position: 'relative',
     minHeight: 320,
@@ -464,9 +486,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginHorizontal: -Spacing.sm,
   },
+  compassStageCompact: {
+    marginHorizontal: 0,
+  },
   bearingBlock: {
     alignItems: 'center',
     marginTop: Spacing.lg,
+  },
+  bearingBlockCompact: {
+    marginTop: Spacing.md,
   },
   degreeDegBorder: {
     borderRadius: Radius.round,
@@ -482,11 +510,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)',
   },
+  degreeDegInnerCompact: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+  },
   degreeValue: {
     ...Fonts.bold,
     fontSize: 30,
     color: Colors.textWarmCream,
     fontVariant: ['tabular-nums'],
+  },
+  degreeValueCompact: {
+    fontSize: 26,
   },
   degreeCaption: {
     ...Fonts.regular,
@@ -499,6 +534,10 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xl,
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
+  },
+  hintPanelCompact: {
+    marginTop: Spacing.lg,
+    paddingHorizontal: Spacing.sm,
   },
   hintIconCircle: {
     width: 48,
@@ -517,6 +556,9 @@ const styles = StyleSheet.create({
     color: Colors.textLight,
     textAlign: 'center',
   },
+  hintTitleCompact: {
+    fontSize: 16,
+  },
   hintSub: {
     ...Fonts.regular,
     fontSize: 14,
@@ -526,6 +568,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     maxWidth: 320,
   },
+  hintSubCompact: {
+    fontSize: 13,
+    lineHeight: 19,
+  },
   infoCard: {
     marginTop: Spacing.xl,
     borderRadius: Radius.lg,
@@ -534,6 +580,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.1)',
     backgroundColor: Colors.backgroundCard,
     overflow: 'hidden',
+  },
+  infoCardCompact: {
+    marginTop: Spacing.lg,
   },
   infoCardGlow: {
     ...StyleSheet.absoluteFillObject,
@@ -568,6 +617,9 @@ const styles = StyleSheet.create({
     color: Colors.textWhite,
     marginTop: 4,
     fontVariant: ['tabular-nums'],
+  },
+  distanceKmCompact: {
+    fontSize: 22,
   },
   infoFoot: {
     flexDirection: 'row',

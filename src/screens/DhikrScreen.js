@@ -7,27 +7,49 @@ import {
   StatusBar,
   ScrollView,
   TouchableOpacity,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
 import { DHIKR_CATEGORIES } from '../constants/data';
 import MainTabBar from '../components/MainTabBar';
 
 // ─── Circular Counter ─────────────────────────────────────────────
-const TasbihCounter = ({ count, target, onPress, onReset, onSetTarget }) => {
+const TasbihCounter = ({ count, target, onPress, onReset, onSetTarget, isCompact, isSmall }) => {
   const progress = Math.min(count / target, 1);
   const isComplete = count >= target;
+  const circleSize = isSmall ? 164 : isCompact ? 182 : 200;
+  const innerSize = circleSize - 20;
+  const countFontSize = isSmall ? 58 : isCompact ? 68 : 80;
+  const countLineHeight = isSmall ? 64 : isCompact ? 74 : 88;
 
   return (
     <View style={counterStyles.wrapper}>
       {/* Circular button */}
       <TouchableOpacity
-        style={[counterStyles.circle, isComplete && counterStyles.circleComplete]}
+        style={[
+          counterStyles.circle,
+          { width: circleSize, height: circleSize, borderRadius: circleSize / 2 },
+          isComplete && counterStyles.circleComplete,
+        ]}
         onPress={onPress}
         activeOpacity={0.85}
       >
         {/* Progress ring visual using border */}
-        <View style={[counterStyles.progressRing, { borderColor: isComplete ? Colors.gold : Colors.backgroundCard }]}>
-          <Text style={counterStyles.countText}>{count}</Text>
+        <View
+          style={[
+            counterStyles.progressRing,
+            {
+              width: innerSize,
+              height: innerSize,
+              borderRadius: innerSize / 2,
+              borderColor: isComplete ? Colors.gold : Colors.backgroundCard,
+            },
+          ]}
+        >
+          <Text style={[counterStyles.countText, { fontSize: countFontSize, lineHeight: countLineHeight }]}>
+            {count}
+          </Text>
         </View>
       </TouchableOpacity>
 
@@ -35,8 +57,11 @@ const TasbihCounter = ({ count, target, onPress, onReset, onSetTarget }) => {
       <Text style={counterStyles.target}>Target: {target}</Text>
 
       {/* Buttons */}
-      <View style={counterStyles.btnRow}>
-        <TouchableOpacity style={counterStyles.resetBtn} onPress={onReset}>
+      <View style={[counterStyles.btnRow, isSmall && counterStyles.btnRowSmall]}>
+        <TouchableOpacity
+          style={[counterStyles.resetBtn, isCompact && counterStyles.resetBtnCompact, isSmall && counterStyles.resetBtnSmall]}
+          onPress={onReset}
+        >
           <Text style={counterStyles.resetIcon}>↺</Text>
           <Text style={counterStyles.resetText}>Reset</Text>
         </TouchableOpacity>
@@ -96,6 +121,10 @@ const counterStyles = StyleSheet.create({
     gap: 16,
     alignItems: 'center',
   },
+  btnRowSmall: {
+    width: '100%',
+    justifyContent: 'center',
+  },
   resetBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -106,6 +135,13 @@ const counterStyles = StyleSheet.create({
     borderRadius: Radius.md,
     width: 160,
     justifyContent: 'center',
+  },
+  resetBtnCompact: {
+    width: 144,
+    paddingVertical: 10,
+  },
+  resetBtnSmall: {
+    width: 132,
   },
   resetIcon: {
     fontSize: 18,
@@ -131,6 +167,10 @@ const counterStyles = StyleSheet.create({
 export default function DhikrScreen({ navigation }) {
   const [count, setCount] = useState(2);
   const [target] = useState(33);
+  const { width } = useWindowDimensions();
+  const isCompact = width < 380;
+  const isSmall = width < 340;
+  const androidTopInset = Platform.OS === 'android' ? Math.max(StatusBar.currentHeight || 0, 0) : 0;
 
   const categoryIcons = {
     morning: '🌅',
@@ -143,10 +183,13 @@ export default function DhikrScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundDark} />
 
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView showsVerticalScrollIndicator={false}>
+      <SafeAreaView style={[styles.safeArea, { paddingTop: 16 + androidTopInset }]}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.scrollContent, isCompact && styles.scrollContentCompact]}
+        >
           {/* Title */}
-          <Text style={styles.pageTitle}>Digital Tasbih</Text>
+          <Text style={[styles.pageTitle, isCompact && styles.pageTitleCompact]}>Digital Tasbih</Text>
 
           {/* Counter */}
           <TasbihCounter
@@ -155,27 +198,33 @@ export default function DhikrScreen({ navigation }) {
             onPress={() => setCount((c) => c + 1)}
             onReset={() => setCount(0)}
             onSetTarget={() => {}}
+            isCompact={isCompact}
+            isSmall={isSmall}
           />
 
           {/* Divider */}
           <View style={styles.divider} />
 
           {/* Dhikr Library */}
-          <Text style={styles.sectionTitle}>Dhikr Library</Text>
+          <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>Dhikr Library</Text>
 
-          <View style={styles.libraryList}>
+          <View style={[styles.libraryList, isCompact && styles.libraryListCompact]}>
             {DHIKR_CATEGORIES.map((cat) => (
               <TouchableOpacity
                 key={cat.id}
-                style={styles.libraryItem}
+                style={[styles.libraryItem, isCompact && styles.libraryItemCompact]}
                 activeOpacity={0.7}
                 onPress={() => navigation?.navigate('AdhkarDetail', { category: cat })}
               >
-                <View style={styles.libraryIconBg}>
-                  <Text style={styles.libraryIcon}>{categoryIcons[cat.id] || '📿'}</Text>
+                <View style={[styles.libraryIconBg, isCompact && styles.libraryIconBgCompact]}>
+                  <Text style={[styles.libraryIcon, isCompact && styles.libraryIconCompact]}>
+                    {categoryIcons[cat.id] || '📿'}
+                  </Text>
                 </View>
                 <View style={styles.libraryInfo}>
-                  <Text style={styles.libraryName}>{cat.name}</Text>
+                  <Text style={[styles.libraryName, isCompact && styles.libraryNameCompact]} numberOfLines={1}>
+                    {cat.name}
+                  </Text>
                   <Text style={styles.libraryCount}>{cat.count} Adhkar</Text>
                 </View>
                 <Text style={styles.chevron}>›</Text>
@@ -201,7 +250,12 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 16,
+  },
+  scrollContent: {
+    paddingBottom: Spacing.sm,
+  },
+  scrollContentCompact: {
+    paddingBottom: Spacing.md,
   },
   pageTitle: {
     ...Fonts.bold,
@@ -209,6 +263,9 @@ const styles = StyleSheet.create({
     color: Colors.textWhite,
     textAlign: 'center',
     marginBottom: 8,
+  },
+  pageTitleCompact: {
+    fontSize: 20,
   },
   divider: {
     height: 1,
@@ -221,9 +278,16 @@ const styles = StyleSheet.create({
     color: Colors.textWhite,
     marginBottom: 12,
   },
+  sectionTitleCompact: {
+    fontSize: 18,
+  },
   libraryList: {
     gap: 4,
     paddingBottom: 16,
+  },
+  libraryListCompact: {
+    gap: 6,
+    paddingBottom: 20,
   },
   libraryItem: {
     flexDirection: 'row',
@@ -233,6 +297,10 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 16,
   },
+  libraryItemCompact: {
+    padding: 12,
+    gap: 12,
+  },
   libraryIconBg: {
     width: 50,
     height: 50,
@@ -241,12 +309,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  libraryIconBgCompact: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+  },
   libraryIcon: { fontSize: 24 },
+  libraryIconCompact: { fontSize: 20 },
   libraryInfo: { flex: 1 },
   libraryName: {
     ...Fonts.bold,
     fontSize: 16,
     color: Colors.textWhite,
+  },
+  libraryNameCompact: {
+    fontSize: 15,
   },
   libraryCount: {
     ...Fonts.regular,
@@ -257,5 +334,10 @@ const styles = StyleSheet.create({
   chevron: {
     fontSize: 24,
     color: Colors.textMuted,
+  },
+  tabBarWrapper: {
+    backgroundColor: Colors.backgroundDark,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.lg,
   },
 });

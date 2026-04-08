@@ -8,6 +8,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
@@ -20,6 +21,10 @@ import { usePrayerTimes, useCountdownToDate } from '../hooks/usePrayerData';
 export default function HomeScreen({ navigation }) {
   const { prayers, nextPrayer, nextPrayerAt, locationLabel, loading } = usePrayerTimes();
   const countdown = useCountdownToDate(nextPrayerAt);
+  const { width } = useWindowDimensions();
+  const isCompact = width < 360;
+  const countdownSize = width < 340 ? 28 : width < 390 ? 34 : 40;
+  const prayerNameSize = width < 340 ? 28 : width < 390 ? 31 : 34;
 
   const today = new Date();
   const dateString = today.toLocaleDateString('en-US', {
@@ -44,7 +49,16 @@ export default function HomeScreen({ navigation }) {
                 size={20}
                 centerFill={Colors.backgroundBlue}
               />
-              <Text style={styles.locationText}>Sylhet</Text>
+              <Text style={styles.locationText} numberOfLines={1} ellipsizeMode="tail">
+                {locationLabel || 'Finding location...'}
+              </Text>
+              {loading ? (
+                <ActivityIndicator
+                  size="small"
+                  color={Colors.textFrost}
+                  style={styles.locationSpinner}
+                />
+              ) : null}
             </View>
           </View>
           <TouchableOpacity
@@ -58,16 +72,18 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         <View style={styles.hero}>
-          <Text style={styles.nextLabel}>NEXT PRAYER</Text>
+          <Text style={[styles.nextLabel, isCompact && styles.nextLabelCompact]}>NEXT PRAYER</Text>
           <LinearGradient
             colors={[Colors.goldStart, Colors.goldMid, Colors.goldEnd]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.nextCardBorder}
           >
-            <View style={styles.nextCard}>
-              <Text style={styles.nextPrayerName}>{nextPrayer?.name}</Text>
-              <Text style={styles.countdown}>{countdown}</Text>
+            <View style={[styles.nextCard, isCompact && styles.nextCardCompact]}>
+              <Text style={[styles.nextPrayerName, { fontSize: prayerNameSize }]}>{nextPrayer?.name}</Text>
+              <Text style={[styles.countdown, { fontSize: countdownSize }, isCompact && styles.countdownCompact]}>
+                {countdown}
+              </Text>
               <View style={styles.startsRow}>
                 <View style={styles.startsDot} />
                 <Text style={styles.startsAt}>
@@ -147,6 +163,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.textWhite,
     maxWidth: 220,
+    flexShrink: 1,
   },
   locationSpinner: {
     marginLeft: 4,
@@ -173,6 +190,10 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginBottom: Spacing.md,
   },
+  nextLabelCompact: {
+    marginBottom: Spacing.sm,
+    letterSpacing: 1.4,
+  },
   nextCardBorder: {
     borderRadius: Radius.xl,
     padding: 1.5,
@@ -188,11 +209,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.06)',
   },
+  nextCardCompact: {
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+  },
   nextPrayerName: {
     ...Fonts.bold,
     fontSize: 34,
     color: Colors.gold,
     marginBottom: 4,
+    textAlign: 'center',
   },
   countdown: {
     ...Fonts.medium,
@@ -200,6 +226,10 @@ const styles = StyleSheet.create({
     color: Colors.textLightAlt,
     letterSpacing: 6,
     fontVariant: ['tabular-nums'],
+    textAlign: 'center',
+  },
+  countdownCompact: {
+    letterSpacing: 2.5,
   },
   startsRow: {
     flexDirection: 'row',

@@ -10,6 +10,8 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
+  useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +30,10 @@ export default function QuranScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [progress, setProgress] = useState(null);
+  const { width } = useWindowDimensions();
+  const isCompact = width < 380;
+  const isSmall = width < 340;
+  const androidTopInset = Platform.OS === 'android' ? Math.max(StatusBar.currentHeight || 0, 0) : 0;
 
   const loadSurahs = useCallback(async () => {
     setError(null);
@@ -106,11 +112,11 @@ export default function QuranScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundDark} />
 
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={[styles.safeArea, { paddingTop: Spacing.md + androidTopInset }]}>
         {continueMeta ? (
           <TouchableOpacity
             activeOpacity={0.85}
-            style={styles.continueCard}
+            style={[styles.continueCard, isCompact && styles.continueCardCompact]}
             onPress={() =>
               navigation?.navigate('QuranReader', {
                 surah: {
@@ -130,7 +136,7 @@ export default function QuranScreen({ navigation }) {
                 </View>
                 <View style={styles.continueTextCol}>
                   <Text style={styles.continueTitle}>Continue Reading</Text>
-                  <Text style={styles.continueSurah} numberOfLines={1}>
+                  <Text style={[styles.continueSurah, isSmall && styles.continueSurahSmall]} numberOfLines={1}>
                     Surah {continueMeta.surah.name}
                   </Text>
                   <Text style={styles.continueAyah}>
@@ -149,12 +155,12 @@ export default function QuranScreen({ navigation }) {
         ) : null}
 
         {/* Search Bar */}
-        <View style={styles.searchBar}>
+        <View style={[styles.searchBar, isCompact && styles.searchBarCompact]}>
           <Ionicons name="search" size={18} color={Colors.textMuted} />
           <TextInput
             placeholder="Search Surah..."
             placeholderTextColor={Colors.textMuted}
-            style={styles.searchInput}
+            style={[styles.searchInput, isCompact && styles.searchInputCompact]}
             value={search}
             onChangeText={setSearch}
             autoCorrect={false}
@@ -166,17 +172,37 @@ export default function QuranScreen({ navigation }) {
         <View style={styles.filterRow}>
           <TouchableOpacity
             onPress={() => setActiveTab('surah')}
-            style={[styles.filterBtn, activeTab === 'surah' && styles.filterBtnActive]}
+            style={[
+              styles.filterBtn,
+              isCompact && styles.filterBtnCompact,
+              activeTab === 'surah' && styles.filterBtnActive,
+            ]}
           >
-            <Text style={[styles.filterText, activeTab === 'surah' && styles.filterTextActive]}>
+            <Text
+              style={[
+                styles.filterText,
+                isCompact && styles.filterTextCompact,
+                activeTab === 'surah' && styles.filterTextActive,
+              ]}
+            >
               Surah
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setActiveTab('juz')}
-            style={[styles.filterBtn, activeTab === 'juz' && styles.filterBtnActive]}
+            style={[
+              styles.filterBtn,
+              isCompact && styles.filterBtnCompact,
+              activeTab === 'juz' && styles.filterBtnActive,
+            ]}
           >
-            <Text style={[styles.filterText, activeTab === 'juz' && styles.filterTextActive]}>
+            <Text
+              style={[
+                styles.filterText,
+                isCompact && styles.filterTextCompact,
+                activeTab === 'juz' && styles.filterTextActive,
+              ]}
+            >
               Juz
             </Text>
           </TouchableOpacity>
@@ -213,7 +239,7 @@ export default function QuranScreen({ navigation }) {
         {!loading || surahs.length > 0 ? (
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.surahList}
+            contentContainerStyle={[styles.surahList, isCompact && styles.surahListCompact]}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -227,7 +253,7 @@ export default function QuranScreen({ navigation }) {
               ? filteredSurahs.map((surah) => (
                   <TouchableOpacity
                     key={surah.id}
-                    style={styles.surahRow}
+                    style={[styles.surahRow, isCompact && styles.surahRowCompact]}
                     activeOpacity={0.7}
                     onPress={() =>
                       navigation?.navigate('QuranReader', {
@@ -240,23 +266,27 @@ export default function QuranScreen({ navigation }) {
                       })
                     }
                   >
-                    <View style={styles.numberBadge}>
+                    <View style={[styles.numberBadge, isCompact && styles.numberBadgeCompact]}>
                       <Ionicons name="book-outline" size={20} color={Colors.textMuted} />
                       <Text style={styles.surahNumber}>{surah.id}</Text>
                     </View>
                     <View style={styles.surahInfo}>
-                      <Text style={styles.surahName}>{surah.name}</Text>
+                      <Text style={[styles.surahName, isCompact && styles.surahNameCompact]} numberOfLines={1}>
+                        {surah.name}
+                      </Text>
                       <Text style={styles.surahTranslation} numberOfLines={1}>
                         {surah.translation}
                       </Text>
                     </View>
-                    <Text style={styles.ayahCount}>{surah.ayahs} Ayahs</Text>
+                    <Text style={[styles.ayahCount, isCompact && styles.ayahCountCompact]} numberOfLines={1}>
+                      {surah.ayahs} Ayahs
+                    </Text>
                   </TouchableOpacity>
                 ))
               : juzRows.map((row) => (
                   <TouchableOpacity
                     key={row.juzNum}
-                    style={styles.surahRow}
+                    style={[styles.surahRow, isCompact && styles.surahRowCompact]}
                     activeOpacity={0.7}
                     onPress={() => {
                       const s =
@@ -276,12 +306,14 @@ export default function QuranScreen({ navigation }) {
                       });
                     }}
                   >
-                    <View style={styles.numberBadge}>
+                    <View style={[styles.numberBadge, isCompact && styles.numberBadgeCompact]}>
                       <Ionicons name="albums-outline" size={20} color={Colors.textMuted} />
                       <Text style={styles.surahNumber}>{row.juzNum}</Text>
                     </View>
                     <View style={styles.surahInfo}>
-                      <Text style={styles.surahName}>Juz {row.juzNum}</Text>
+                      <Text style={[styles.surahName, isCompact && styles.surahNameCompact]} numberOfLines={1}>
+                        Juz {row.juzNum}
+                      </Text>
                       <Text style={styles.surahTranslation} numberOfLines={1}>
                         {row.subtitle}
                       </Text>
@@ -308,8 +340,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.md,
-    padding: '20px',
+    paddingBottom: Spacing.sm,
   },
 
   continueCard: {
@@ -319,6 +350,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.separator,
+  },
+  continueCardCompact: {
+    padding: Spacing.sm + 2,
   },
   continueTopRow: {
     flexDirection: 'row',
@@ -352,6 +386,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.textWhite,
     marginTop: 4,
+  },
+  continueSurahSmall: {
+    fontSize: 15,
   },
   continueAyah: {
     ...Fonts.regular,
@@ -387,12 +424,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.separator,
   },
+  searchBarCompact: {
+    paddingVertical: 10,
+    marginBottom: Spacing.sm + 2,
+  },
   searchInput: {
     flex: 1,
     ...Fonts.regular,
     fontSize: 14,
     color: Colors.textWhite,
     paddingVertical: 0,
+  },
+  searchInputCompact: {
+    fontSize: 13,
   },
 
   filterRow: {
@@ -406,6 +450,10 @@ const styles = StyleSheet.create({
     borderRadius: Radius.round,
     backgroundColor: Colors.backgroundMedium,
   },
+  filterBtnCompact: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+  },
   filterBtnActive: {
     backgroundColor: Colors.backgroundBlue,
   },
@@ -413,6 +461,9 @@ const styles = StyleSheet.create({
     ...Fonts.medium,
     fontSize: 14,
     color: Colors.textMuted,
+  },
+  filterTextCompact: {
+    fontSize: 13,
   },
   filterTextActive: {
     color: Colors.textWhite,
@@ -473,6 +524,9 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md,
     flexGrow: 1,
   },
+  surahListCompact: {
+    paddingBottom: Spacing.lg,
+  },
   surahRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -482,6 +536,10 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.05)',
     gap: Spacing.sm + 4,
   },
+  surahRowCompact: {
+    paddingVertical: 12,
+    gap: Spacing.sm,
+  },
   numberBadge: {
     width: 46,
     height: 46,
@@ -489,6 +547,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  numberBadgeCompact: {
+    width: 42,
+    height: 42,
+    borderRadius: 10,
   },
   surahNumber: {
     position: 'absolute',
@@ -504,6 +567,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.textWhite,
   },
+  surahNameCompact: {
+    fontSize: 15,
+  },
   surahTranslation: {
     ...Fonts.regular,
     fontSize: 13,
@@ -514,9 +580,17 @@ const styles = StyleSheet.create({
     ...Fonts.regular,
     fontSize: 13,
     color: Colors.textMuted,
+    minWidth: 72,
+    textAlign: 'right',
+  },
+  ayahCountCompact: {
+    fontSize: 12,
+    minWidth: 64,
   },
 
   tabBarWrapper: {
     backgroundColor: Colors.backgroundDark,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.lg,
   },
 });
