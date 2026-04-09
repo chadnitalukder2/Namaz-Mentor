@@ -11,11 +11,11 @@ import {
   useWindowDimensions,
   Platform,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
 import LocationPinIllustration from '../components/LocationPinIllustration';
 import MainTabBar from '../components/MainTabBar';
+import HomeHeroMosqueIcon from '../components/HomeHeroMosqueIcon';
 import { usePrayerTimes, useCountdownToDate } from '../hooks/usePrayerData';
 import FajrPrayerIcon from '../components/FajrPrayerIcon';
 import DhuhrPrayerIcon from '../components/DhuhrPrayerIcon';
@@ -164,21 +164,9 @@ export default function HomeScreen({ navigation }) {
             </View>
           </View>
 
-          <LinearGradient
-            colors={['rgba(217, 170, 85, 0.55)', 'rgba(217, 170, 85, 0.12)']}
-            start={{ x: 0.2, y: 0 }}
-            end={{ x: 0.8, y: 1 }}
-            style={styles.heroIconRing}
-          >
-            <LinearGradient
-              colors={['rgba(6, 31, 60, 0.95)', 'rgba(4, 19, 39, 0.95)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.heroIconCenter}
-            >
-              <MaterialCommunityIcons name="mosque-outline" size={58} color={Colors.gold} />
-            </LinearGradient>
-          </LinearGradient>
+          <View style={styles.heroIconWrap}>
+            <HomeHeroMosqueIcon size={isCompact ? 102 : 114} />
+          </View>
         </View>
 
         <View style={styles.waveWrap}>
@@ -318,25 +306,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(2, 18, 38, 0.35)',
   },
-  heroIconRing: {
-    width: 124,
-    height: 124,
-    borderRadius: 62,
-    padding: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#D9AA55',
-    shadowOpacity: 0.26,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 8,
-  },
-  heroIconCenter: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 60,
-    borderWidth: 1,
-    borderColor: 'rgba(217, 170, 85, 0.3)',
+  heroIconWrap: {
+    width: 114,
+    height: 114,
     alignItems: 'center',
     justifyContent: 'center',
   },
