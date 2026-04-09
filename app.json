@@ -4,7 +4,6 @@
     "slug": "namaz-mentor",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
       "backgroundColor": "#021226"
@@ -29,13 +28,7 @@
       ]
     },
     "plugins": [
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/notification-icon.png",
-          "color": "#021226"
-        }
-      ]
+      "expo-font"
     ]
   }
 }

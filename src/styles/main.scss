@@ -1,0 +1,48 @@
+@use "./base";
+@use "./layout";
+@use "./components";
+@use "./tokens" as *;
+
+.home-hero {
+  background: $bg-blue;
+  border-radius: $radius-xl;
+  padding: 16px;
+}
+
+.hero-label {
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #b0b1bc;
+}
+
+.next-prayer-box {
+  border-radius: $radius-xl;
+  padding: 1.5px;
+  background: linear-gradient(135deg, $gold-start, $gold-mid, $gold-end);
+}
+
+.next-prayer-inner {
+  background: $bg-medium;
+  border-radius: 22px;
+  padding: 22px;
+  text-align: center;
+}
+
+.next-prayer-inner h2 {
+  margin: 0 0 6px;
+  font-size: 34px;
+  color: $gold;
+}
+
+.countdown {
+  margin: 0;
+  font-size: 36px;
+  letter-spacing: 4px;
+}
+
+.prayer-list {
+  margin-top: 16px;
+  display: grid;
+  gap: 8px;
+}

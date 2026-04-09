@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import * as Location from 'expo-location';
+import { Platform } from 'react-native';
 import {
   PRAYER_DEFINITIONS,
   FALLBACK_LOCATION,
@@ -234,18 +235,20 @@ export function useQibla() {
             label = `${lat.toFixed(2)}°, ${lng.toFixed(2)}°`;
           }
 
-          const sub = await Location.watchHeadingAsync((h) => {
-            const t = h.trueHeading;
-            const m = h.magHeading;
-            const v = t >= 0 ? t : m;
-            if (!cancelled && v != null && !Number.isNaN(v)) {
-              setHeadingDeg(v);
+          if (Platform.OS !== 'web') {
+            const sub = await Location.watchHeadingAsync((h) => {
+              const t = h.trueHeading;
+              const m = h.magHeading;
+              const v = t >= 0 ? t : m;
+              if (!cancelled && v != null && !Number.isNaN(v)) {
+                setHeadingDeg(v);
+              }
+            });
+            headingSubRef.current = sub;
+            if (cancelled && sub && typeof sub.remove === 'function') {
+              sub.remove();
+              headingSubRef.current = null;
             }
-          });
-          headingSubRef.current = sub;
-          if (cancelled && sub && typeof sub.remove === 'function') {
-            sub.remove();
-            headingSubRef.current = null;
           }
         }
       } catch {

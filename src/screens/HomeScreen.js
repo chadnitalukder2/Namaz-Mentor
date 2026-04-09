@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -12,32 +12,86 @@ import {
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
-import { PrayerCard } from '../components/UIComponents';
 import LocationPinIllustration from '../components/LocationPinIllustration';
-import SettingsGearIllustration from '../components/SettingsGearIllustration';
 import MainTabBar from '../components/MainTabBar';
 import { usePrayerTimes, useCountdownToDate } from '../hooks/usePrayerData';
+import FajrPrayerIcon from '../components/FajrPrayerIcon';
+import DhuhrPrayerIcon from '../components/DhuhrPrayerIcon';
+import AsrPrayerIcon from '../components/AsrPrayerIcon';
+import MaghribPrayerIcon from '../components/MaghribPrayerIcon';
+import IshaPrayerIcon from '../components/IshaPrayerIcon';
+import { timingToLocalDate } from '../utils/prayerTimes';
 
-const TOP_SECTION_PADDING = 16; 
+const TOP_SECTION_PADDING = 14;
+
+const PRAYER_SVG_ICONS = {
+  fajr: FajrPrayerIcon,
+  dhuhr: DhuhrPrayerIcon,
+  asr: AsrPrayerIcon,
+  maghrib: MaghribPrayerIcon,
+  isha: IshaPrayerIcon,
+};
 
 export default function HomeScreen({ navigation }) {
   const { prayers, nextPrayer, nextPrayerAt, locationLabel, loading } = usePrayerTimes();
-  const countdown = useCountdownToDate(nextPrayerAt);
   const { width } = useWindowDimensions();
   const isCompact = width < 360;
-  const locationMaxWidth = Math.max(130, width - 170);
+  const locationMaxWidth = Math.max(130, width - 110);
   const androidTopInset =
     Platform.OS === 'android' ? Math.max(StatusBar.currentHeight || 0, 24) : 0;
-  const countdownSize = width < 340 ? 28 : width < 390 ? 34 : 40;
-  const prayerNameSize = width < 340 ? 28 : width < 390 ? 31 : 34;
+  const [selectedPrayerId, setSelectedPrayerId] = useState(null);
 
-  const today = new Date();
-  const dateString = today.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-  });
+  const displayLocation = (locationLabel || 'Finding location...')
+    .split('·')[0]
+    .split(',')[0]
+    .trim();
+
+  const upcomingPrayer = useMemo(
+    () =>
+      (nextPrayer && prayers.find((p) => p.id === nextPrayer.id)) ||
+      prayers.find((p) => !p.completed) ||
+      prayers[0] ||
+      null,
+    [prayers, nextPrayer]
+  );
+
+  useEffect(() => {
+    if (!upcomingPrayer) return;
+    if (!selectedPrayerId || !prayers.some((p) => p.id === selectedPrayerId)) {
+      setSelectedPrayerId(upcomingPrayer.id);
+    }
+  }, [selectedPrayerId, prayers, upcomingPrayer]);
+
+  const selectedIndex = useMemo(
+    () => prayers.findIndex((p) => p.id === selectedPrayerId),
+    [prayers, selectedPrayerId]
+  );
+
+  const selectedPrayer =
+    (selectedPrayerId && prayers.find((p) => p.id === selectedPrayerId)) || upcomingPrayer;
+  const selectedPrayerTarget =
+    selectedPrayer?.id === upcomingPrayer?.id
+      ? nextPrayerAt || buildPrayerTargetDate(selectedPrayer)
+      : buildPrayerTargetDate(selectedPrayer);
+  const countdownTicker = useCountdownToDate(selectedPrayerTarget || nextPrayerAt);
+  const formattedCountdown = formatHeroCountdown(selectedPrayerTarget);
+  const startsAtLabel = selectedPrayer?.time || '--:--';
+
+  const handlePrevPrayer = () => {
+    if (!prayers.length) return;
+    const currentIndex = selectedIndex >= 0 ? selectedIndex : 0;
+    const prevIndex = (currentIndex - 1 + prayers.length) % prayers.length;
+    setSelectedPrayerId(prayers[prevIndex].id);
+  };
+
+  const handleNextPrayer = () => {
+    if (!prayers.length) return;
+    const currentIndex = selectedIndex >= 0 ? selectedIndex : 0;
+    const nextIndex = (currentIndex + 1) % prayers.length;
+    setSelectedPrayerId(prayers[nextIndex].id);
+  };
 
   return (
     <View style={styles.root}>
@@ -54,79 +108,96 @@ export default function HomeScreen({ navigation }) {
         ]}
       >
         <View style={styles.header}>
-          <View style={styles.headerInfo}>
-            <Text style={styles.dateText}>{dateString}</Text>
-            <View style={[styles.locationPill, isCompact && styles.locationPillCompact]}>
-              <LocationPinIllustration
-                size={20}
-                centerFill={Colors.backgroundBlue}
+          <View style={styles.locationPill}>
+            <LocationPinIllustration size={16} centerFill={Colors.backgroundBlue} />
+            <Text
+              style={[styles.locationText, { maxWidth: locationMaxWidth }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {displayLocation}
+            </Text>
+            {loading ? (
+              <ActivityIndicator
+                size="small"
+                color={Colors.textFrost}
+                style={styles.locationSpinner}
               />
-              <Text
-                style={[styles.locationText, { maxWidth: locationMaxWidth }]}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {locationLabel || 'Finding location...'}
-              </Text>
-              {loading ? (
-                <ActivityIndicator
-                  size="small"
-                  color={Colors.textFrost}
-                  style={styles.locationSpinner}
-                />
-              ) : null}
-            </View>
+            ) : null}
           </View>
-          <TouchableOpacity
-            style={[styles.settingsBtn, isCompact && styles.settingsBtnCompact]}
-            onPress={() => navigation?.navigate('Settings')}
-            accessibilityRole="button"
-            accessibilityLabel="Open settings"
-          >
-            <SettingsGearIllustration size={22} />
-          </TouchableOpacity>
         </View>
 
-        <View style={styles.hero}>
-          <Text style={[styles.nextLabel, isCompact && styles.nextLabelCompact]}>NEXT PRAYER</Text>
-          <LinearGradient
-            colors={[Colors.goldStart, Colors.goldMid, Colors.goldEnd]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.nextCardBorder}
-          >
-            <View style={[styles.nextCard, isCompact && styles.nextCardCompact]}>
-              <Text style={[styles.nextPrayerName, { fontSize: prayerNameSize }]}>{nextPrayer?.name}</Text>
-              <Text style={[styles.countdown, { fontSize: countdownSize }, isCompact && styles.countdownCompact]}>
-                {countdown}
+        <View style={styles.heroRow}>
+          <View style={styles.heroTextBlock}>
+            <View style={styles.upcomingPill}>
+              <MaterialCommunityIcons name="clock-outline" size={12} color={Colors.gold} />
+              <Text style={styles.upcomingPillText}>
+                Upcoming: {upcomingPrayer?.name || '--'} {upcomingPrayer?.time || '--:--'}
               </Text>
-              <View style={styles.startsRow}>
-                <View style={styles.startsDot} />
-                <Text style={styles.startsAt}>
-                  Starts at{' '}
-                  <Text style={styles.startsAtTime}>{nextPrayer?.time}</Text>
-                </Text>
-              </View>
             </View>
+            <Text style={[styles.nextPrayerName, isCompact && styles.nextPrayerNameCompact]}>
+              {selectedPrayer?.name || '--'}
+            </Text>
+            <Text style={[styles.countdown, isCompact && styles.countdownCompact]}>
+              {formattedCountdown}
+            </Text>
+            <Text style={styles.startsAt}>Starts at {startsAtLabel}</Text>
+            <View style={styles.heroControls}>
+              <TouchableOpacity
+                style={styles.controlBtn}
+                activeOpacity={0.85}
+                onPress={handlePrevPrayer}
+                accessibilityRole="button"
+                accessibilityLabel="Previous prayer"
+              >
+                <MaterialCommunityIcons name="chevron-left" size={18} color={Colors.gold} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.controlBtn}
+                activeOpacity={0.85}
+                onPress={handleNextPrayer}
+                accessibilityRole="button"
+                accessibilityLabel="Next prayer"
+              >
+                <MaterialCommunityIcons name="chevron-right" size={18} color={Colors.gold} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <LinearGradient
+            colors={['rgba(217, 170, 85, 0.55)', 'rgba(217, 170, 85, 0.12)']}
+            start={{ x: 0.2, y: 0 }}
+            end={{ x: 0.8, y: 1 }}
+            style={styles.heroIconRing}
+          >
+            <LinearGradient
+              colors={['rgba(6, 31, 60, 0.95)', 'rgba(4, 19, 39, 0.95)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.heroIconCenter}
+            >
+              <MaterialCommunityIcons name="mosque-outline" size={58} color={Colors.gold} />
+            </LinearGradient>
           </LinearGradient>
+        </View>
+
+        <View style={styles.waveWrap}>
+          <View style={styles.waveBack} />
+          <View style={styles.waveFront} />
         </View>
       </SafeAreaView>
 
       <View style={styles.sheet}>
-        <View style={styles.sheetHandle} />
-        <View style={styles.sheetHead}>
-          <Text style={styles.sheetTitle}>Prayer times</Text>
-          <Text style={styles.sheetHint}>Tap the bell to set reminders</Text>
-        </View>
         <ScrollView
           contentContainerStyle={styles.prayerList}
           showsVerticalScrollIndicator={false}
         >
           {prayers.map((prayer) => (
-            <PrayerCard
+            <PrayerRow
               key={prayer.id}
               prayer={prayer}
               isNext={prayer.id === nextPrayer?.id}
+              isSelected={prayer.id === selectedPrayer?.id}
             />
           ))}
         </ScrollView>
@@ -145,185 +216,291 @@ const styles = StyleSheet.create({
   },
   safeTop: {
     backgroundColor: Colors.backgroundBlue,
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     paddingTop: TOP_SECTION_PADDING,
-    paddingBottom: Spacing.md,
+    paddingBottom: 0,
   },
   safeTopCompact: {
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: 14,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-start',
-  },
-  headerInfo: {
-    flex: 1,
-    marginRight: Spacing.sm,
-  },
-  dateText: {
-    ...Fonts.medium,
-    fontSize: 15,
-    color: Colors.textFrost,
-    letterSpacing: 0.2,
   },
   locationPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginTop: 10,
+    gap: 4,
     alignSelf: 'flex-start',
-    maxWidth: '100%',
-    backgroundColor: 'rgba(23, 68, 108, 0.55)',
-    paddingVertical: 6,
-    paddingRight: 14,
-    paddingLeft: 8,
+    paddingVertical: 4,
+    paddingRight: 8,
+    paddingLeft: 0,
     borderRadius: Radius.round,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  locationPillCompact: {
-    paddingRight: 10,
-    paddingLeft: 7,
   },
   locationText: {
     ...Fonts.semiBold,
-    fontSize: 15,
+    fontSize: 16,
     color: Colors.textWhite,
     flexShrink: 1,
   },
   locationSpinner: {
-    marginLeft: 4,
-  },
-  settingsBtn: {
-    width: 44,
-    height: 44,
-    backgroundColor: 'transparent',
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  settingsBtnCompact: {
-    width: 40,
-    height: 40,
+    marginLeft: 6,
   },
 
-  hero: {
-    marginTop: Spacing.lg,
+  heroRow: {
+    marginTop: 16,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
   },
-  nextLabel: {
-    ...Fonts.regular,
-    fontSize: 12,
-    color: Colors.textGrey,
-    letterSpacing: 2,
-    marginBottom: Spacing.md,
+  heroTextBlock: {
+    flex: 1,
+    maxWidth: '62%',
   },
-  nextLabelCompact: {
-    marginBottom: Spacing.sm,
-    letterSpacing: 1.4,
-  },
-  nextCardBorder: {
-    borderRadius: Radius.xl,
-    padding: 1.5,
-    width: '100%',
-    maxWidth: 360,
-  },
-  nextCard: {
-    borderRadius: Radius.xl - 1,
-    backgroundColor: Colors.backgroundMedium,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.lg,
+  upcomingPill: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Radius.round,
+    backgroundColor: 'rgba(217, 170, 85, 0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
+    borderColor: 'rgba(217, 170, 85, 0.4)',
+    marginBottom: 6,
   },
-  nextCardCompact: {
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.md,
+  upcomingPillText: {
+    ...Fonts.medium,
+    fontSize: 11,
+    color: '#EED39D',
   },
   nextPrayerName: {
     ...Fonts.bold,
-    fontSize: 34,
+    fontSize: 44,
     color: Colors.gold,
-    marginBottom: 4,
-    textAlign: 'center',
+    lineHeight: 48,
+  },
+  nextPrayerNameCompact: {
+    fontSize: 36,
+    lineHeight: 40,
   },
   countdown: {
-    ...Fonts.medium,
-    fontSize: 40,
-    color: Colors.textLightAlt,
-    letterSpacing: 6,
-    fontVariant: ['tabular-nums'],
-    textAlign: 'center',
+    ...Fonts.semiBold,
+    fontSize: 34,
+    color: Colors.textWhite,
+    lineHeight: 38,
+    marginTop: -2,
   },
   countdownCompact: {
-    letterSpacing: 2.5,
-  },
-  startsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: Spacing.md,
-  },
-  startsDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.gold,
-    opacity: 0.85,
+    fontSize: 29,
+    lineHeight: 33,
   },
   startsAt: {
     ...Fonts.regular,
-    fontSize: 15,
-    color: Colors.textMuted,
+    color: '#8CA2BA',
+    fontSize: 16,
+    marginTop: 2,
   },
-  startsAtTime: {
-    ...Fonts.semiBold,
-    color: Colors.textLight,
+  heroControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 14,
+  },
+  controlBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 170, 85, 0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(2, 18, 38, 0.35)',
+  },
+  heroIconRing: {
+    width: 124,
+    height: 124,
+    borderRadius: 62,
+    padding: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#D9AA55',
+    shadowOpacity: 0.26,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
+  heroIconCenter: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 60,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 170, 85, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  waveWrap: {
+    height: 70,
+    marginTop: 14,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  waveBack: {
+    position: 'absolute',
+    left: -40,
+    right: -40,
+    height: 120,
+    bottom: -68,
+    borderTopLeftRadius: 120,
+    borderTopRightRadius: 120,
+    backgroundColor: '#1B3B59',
+    opacity: 0.65,
+  },
+  waveFront: {
+    position: 'absolute',
+    left: -20,
+    right: -20,
+    height: 110,
+    bottom: -78,
+    borderTopLeftRadius: 120,
+    borderTopRightRadius: 120,
+    backgroundColor: '#062149',
   },
 
   sheet: {
     flex: 1,
     backgroundColor: Colors.backgroundDark,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  sheetHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.dotInactiveDark,
-    alignSelf: 'center',
-    marginBottom: Spacing.md,
-  },
-  sheetHead: {
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.sm,
-  },
-  sheetTitle: {
-    ...Fonts.bold,
-    fontSize: 22,
-    color: Colors.textWhite,
-  },
-  sheetHint: {
-    ...Fonts.regular,
-    fontSize: 13,
-    color: Colors.textMuted,
-    marginTop: 4,
+    paddingTop: 8,
   },
   prayerList: {
-    paddingHorizontal: Spacing.md,
-    gap: Spacing.sm,
+    paddingHorizontal: 14,
+    gap: 12,
     paddingBottom: Spacing.sm,
   },
   tabBarWrapper: {
-    paddingBottom: Spacing.lg,
-    paddingTop: Spacing.sm,
+    paddingBottom: 12,
+    paddingTop: 8,
+  },
+});
+
+function PrayerRow({ prayer, isNext, isSelected }) {
+  const PrayerIcon = PRAYER_SVG_ICONS[prayer.icon];
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.86}
+      disabled
+      style={[
+        stylesRow.card,
+        isNext && stylesRow.cardNext,
+        isSelected && stylesRow.cardSelected,
+      ]}
+    >
+      <View style={stylesRow.left}>
+        {PrayerIcon ? (
+          <View style={[stylesRow.iconWrap, !isNext && stylesRow.iconMuted]}>
+            <PrayerIcon size={24} />
+          </View>
+        ) : (
+          <MaterialCommunityIcons
+            name="mosque"
+            size={22}
+            color={isNext ? Colors.gold : '#8AA2BF'}
+          />
+        )}
+        <Text style={[stylesRow.name, isNext && stylesRow.nameNext]}>{prayer.name}</Text>
+      </View>
+
+      <View style={stylesRow.right}>
+        <Text style={[stylesRow.time, isNext && stylesRow.timeNext]}>{prayer.time}</Text>
+        {prayer.completed ? (
+          <MaterialCommunityIcons
+            name="check-decagram-outline"
+            size={20}
+            color="#00E58A"
+          />
+        ) : (
+          <MaterialCommunityIcons name="volume-off" size={20} color="#5E7EA0" />
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+function formatHeroCountdown(targetDate) {
+  if (!targetDate) return '0 min';
+  const diff = Math.max(0, targetDate.getTime() - Date.now());
+  const totalMinutes = Math.floor(diff / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours > 0) {
+    return `${hours} hour${hours > 1 ? 's' : ''} ${minutes}min`;
+  }
+
+  return `${Math.max(1, minutes)}min`;
+}
+
+function buildPrayerTargetDate(prayer) {
+  if (!prayer?.rawTime) return null;
+  const todayDate = timingToLocalDate(prayer.rawTime, 0);
+  if (todayDate.getTime() > Date.now()) return todayDate;
+  return timingToLocalDate(prayer.rawTime, 1);
+}
+
+const stylesRow = StyleSheet.create({
+  card: {
+    backgroundColor: '#051F3F',
+    borderRadius: 14,
+    minHeight: 66,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  cardNext: {
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 138, 0.28)',
+  },
+  cardSelected: {
+    borderWidth: 1,
+    borderColor: 'rgba(217, 170, 85, 0.42)',
+  },
+  left: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+  },
+  iconWrap: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconMuted: {
+    opacity: 0.9,
+  },
+  name: {
+    ...Fonts.medium,
+    color: '#A2B1C4',
+    fontSize: 18,
+  },
+  nameNext: {
+    color: Colors.textWhite,
+  },
+  right: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  time: {
+    ...Fonts.medium,
+    color: '#E3EDF9',
+    fontSize: 18,
+  },
+  timeNext: {
+    color: Colors.textWhite,
   },
 });
