@@ -5,44 +5,126 @@
 
 .home-hero {
   background: $bg-blue;
-  border-radius: $radius-xl;
-  padding: 16px;
+  border-radius: 0;
+  padding: 20px 18px 0;
+  min-height: 310px;
+  position: relative;
+  overflow: hidden;
 }
 
-.hero-label {
-  margin: 0 0 10px;
-  font-size: 12px;
-  letter-spacing: 2px;
-  color: #b0b1bc;
+.hero-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  position: relative;
+  z-index: 2;
 }
 
-.next-prayer-box {
-  border-radius: $radius-xl;
-  padding: 1.5px;
-  background: linear-gradient(135deg, $gold-start, $gold-mid, $gold-end);
+.hero-text {
+  max-width: 62%;
 }
 
-.next-prayer-inner {
-  background: $bg-medium;
-  border-radius: 22px;
-  padding: 22px;
-  text-align: center;
-}
-
-.next-prayer-inner h2 {
-  margin: 0 0 6px;
-  font-size: 34px;
+.hero-text h2 {
+  margin: 0;
+  font-size: clamp(46px, 7vw, 62px);
+  line-height: 1;
   color: $gold;
+  font-weight: 700;
 }
 
 .countdown {
-  margin: 0;
-  font-size: 36px;
-  letter-spacing: 4px;
+  margin: 4px 0 0;
+  font-size: clamp(38px, 6vw, 52px);
+  line-height: 1;
+  color: $text-white;
+  font-weight: 600;
+}
+
+.starts-at {
+  margin: 4px 0 0;
+  color: #b8c8da;
+  font-size: 32px;
+  line-height: 1.05;
+}
+
+.hero-controls {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hero-control-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(217, 170, 85, 0.55);
+  background: rgba(2, 18, 38, 0.35);
+  color: $gold;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.hero-icon-wrap {
+  width: 124px;
+  height: 124px;
+  border: 2px solid $gold;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(2, 18, 38, 0.22);
+}
+
+.hero-icon {
+  color: $gold;
+  font-size: 46px;
+}
+
+.hero-wave {
+  position: absolute;
+  left: -56px;
+  right: -56px;
+  height: 126px;
+  bottom: -62px;
+  border-top-left-radius: 140px;
+  border-top-right-radius: 140px;
+  background: #2d4b69;
+  opacity: 0.48;
+}
+
+.hero-wave-front {
+  left: -34px;
+  right: -34px;
+  height: 118px;
+  bottom: -83px;
+  border-top-left-radius: 150px;
+  border-top-right-radius: 150px;
+  background: #062149;
+  opacity: 1;
 }
 
 .prayer-list {
   margin-top: 16px;
   display: grid;
   gap: 8px;
+}
+
+.home-legend {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #9db3cc;
+}
+
+@media (max-width: 640px) {
+  .home-hero {
+    min-height: 252px;
+    padding: 16px 12px 0;
+  }
+
+  .starts-at {
+    font-size: 18px;
+  }
 }

@@ -169,10 +169,10 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
-        <View style={styles.waveWrap}>
+        {/*<View style={styles.waveWrap}>
           <View style={styles.waveBack} />
           <View style={styles.waveFront} />
-        </View>
+        </View> */}
       </SafeAreaView>
 
       <View style={styles.sheet}>
@@ -240,6 +240,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 16,
+    height: 300,
+    backgroundColor: 'blue',
   },
   heroTextBlock: {
     flex: 1,
@@ -318,27 +320,27 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
-  waveBack: {
-    position: 'absolute',
-    left: -40,
-    right: -40,
-    height: 120,
-    bottom: -68,
-    borderTopLeftRadius: 120,
-    borderTopRightRadius: 120,
-    backgroundColor: '#1B3B59',
-    opacity: 0.65,
-  },
-  waveFront: {
-    position: 'absolute',
-    left: -20,
-    right: -20,
-    height: 110,
-    bottom: -78,
-    borderTopLeftRadius: 120,
-    borderTopRightRadius: 120,
-    backgroundColor: '#062149',
-  },
+  // waveBack: {
+  //   position: 'absolute',
+  //   left: -40,
+  //   right: -40,
+  //   height: 120,
+  //   bottom: -68,
+  //   borderTopLeftRadius: 120,
+  //   borderTopRightRadius: 120,
+  //   backgroundColor: '#1B3B59',
+  //   opacity: 0.65,
+  // },
+  // waveFront: {
+  //   position: 'absolute',
+  //   left: -20,
+  //   right: -20,
+  //   height: 110,
+  //   bottom: -78,
+  //   borderTopLeftRadius: 120,
+  //   borderTopRightRadius: 120,
+  //   backgroundColor: '#062149',
+  // },
 
   sheet: {
     flex: 1,
