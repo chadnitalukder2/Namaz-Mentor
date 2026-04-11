@@ -104,7 +104,7 @@ export default function HomeScreen({ navigation }) {
         style={[
           styles.safeTop,
           isCompact && styles.safeTopCompact,
-          androidTopInset > 0 && { paddingTop: TOP_SECTION_PADDING + androidTopInset },
+          androidTopInset > 0 && { paddingTop: androidTopInset },
         ]}
       >
         <View style={styles.header}>
@@ -205,7 +205,6 @@ const styles = StyleSheet.create({
   safeTop: {
     backgroundColor: Colors.backgroundBlue,
     paddingHorizontal: Spacing.md,
-    paddingTop: TOP_SECTION_PADDING,
     paddingBottom: 0,
   },
   safeTopCompact: {
@@ -213,6 +212,10 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'flex-start',
+    backgroundColor: 'rgba(2, 18, 38, 1)',
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 0,
   },
   locationPill: {
     flexDirection: 'row',
@@ -235,13 +238,13 @@ const styles = StyleSheet.create({
   },
 
   heroRow: {
-    marginTop: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 16,
-    height: 300,
-    backgroundColor: 'blue',
+    // height: 300,
+    padding: 20,
+    backgroundColor: 'rgba(2, 18, 38, 1)',
   },
   heroTextBlock: {
     flex: 1,
@@ -267,19 +270,20 @@ const styles = StyleSheet.create({
   },
   nextPrayerName: {
     ...Fonts.bold,
-    fontSize: 44,
+    fontSize: 32,
+    lineHeight: 38,
     color: Colors.gold,
-    lineHeight: 48,
   },
   nextPrayerNameCompact: {
-    fontSize: 36,
-    lineHeight: 40,
+    fontSize: 24,
+    lineHeight: 30,
   },
   countdown: {
-    ...Fonts.semiBold,
-    fontSize: 34,
+    // ...Fonts.,
+    fontWeight: '500',
+    fontSize: 24,
+    lineHeight: 30,
     color: Colors.textWhite,
-    lineHeight: 38,
     marginTop: -2,
   },
   countdownCompact: {
@@ -289,7 +293,7 @@ const styles = StyleSheet.create({
   startsAt: {
     ...Fonts.regular,
     color: '#8CA2BA',
-    fontSize: 16,
+    fontSize: 14,
     marginTop: 2,
   },
   heroControls: {
