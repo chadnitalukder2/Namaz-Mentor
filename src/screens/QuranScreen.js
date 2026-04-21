@@ -21,6 +21,7 @@ import { JUZ_FIRST_SURAH_NUMBER } from '../constants/quranJuz';
 import { fetchAllSurahs } from '../services/quranApi';
 import { getQuranProgress } from '../utils/quranProgress';
 import MainTabBar from '../components/MainTabBar';
+import { TabQuranIcon } from '../components/MainTabIcons';
 
 export default function QuranScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('surah');
@@ -269,8 +270,7 @@ export default function QuranScreen({ navigation }) {
                     }
                   >
                     <View style={[styles.numberBadge, isCompact && styles.numberBadgeCompact]}>
-                      <Ionicons name="book-outline" size={20} color={Colors.textMuted} />
-                      <Text style={styles.surahNumber}>{surah.id}</Text>
+                      <TabQuranIcon size={20} active={false} />
                     </View>
                     <View style={styles.surahInfo}>
                       <Text style={[styles.surahName, isCompact && styles.surahNameCompact]} numberOfLines={1}>
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
   },
 
   surahList: {
-    gap: 2,
+    gap: 12,
     paddingBottom: Spacing.md,
     flexGrow: 1,
   },
@@ -536,12 +536,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 4,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-    gap: Spacing.sm + 4,
+    backgroundColor: Colors.backgroundMedium,
+    borderRadius: Radius.lg,
+    gap: Spacing.sm ,
   },
   surahRowCompact: {
     paddingVertical: 12,
-    gap: Spacing.sm,
+    paddingHorizontal:  12,
+    gap: 16,
   },
   numberBadge: {
     width: 46,
@@ -554,7 +556,8 @@ const styles = StyleSheet.create({
   numberBadgeCompact: {
     width: 42,
     height: 42,
-    borderRadius: 10,
+    borderRadius: 50,
+    backgroundColor: 'rgba(2, 18, 38, 1)',
   },
   surahNumber: {
     position: 'absolute',
