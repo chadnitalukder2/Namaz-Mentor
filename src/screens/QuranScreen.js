@@ -112,8 +112,10 @@ export default function QuranScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundDark} />
 
-      <SafeAreaView style={[styles.safeArea, { paddingTop: Spacing.md + androidTopInset }]}>
-        {continueMeta ? (
+      <SafeAreaView style={[styles.safeArea, {   paddingHorizontal: 20,
+      paddingTop: 20,
+      paddingBottom: 0, }]}>
+        {/* {continueMeta ? (
           <TouchableOpacity
             activeOpacity={0.85}
             style={[styles.continueCard, isCompact && styles.continueCardCompact]}
@@ -152,7 +154,7 @@ export default function QuranScreen({ navigation }) {
               <View style={[styles.progressBarFill, { width: `${continueMeta.pct}%` }]} />
             </View>
           </TouchableOpacity>
-        ) : null}
+        ) : null} */}
 
         {/* Search Bar */}
         <View style={[styles.searchBar, isCompact && styles.searchBarCompact]}>
@@ -416,7 +418,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.backgroundMedium,
-    borderRadius: Radius.md,
+    borderRadius: 50,
+    height: 48,
     paddingHorizontal: Spacing.md - 2,
     paddingVertical: 12,
     gap: 10,
@@ -426,7 +429,7 @@ const styles = StyleSheet.create({
   },
   searchBarCompact: {
     paddingVertical: 10,
-    marginBottom: Spacing.sm + 2,
+    marginBottom: Spacing.sm + 6,
   },
   searchInput: {
     flex: 1,
@@ -436,7 +439,7 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   searchInputCompact: {
-    fontSize: 13,
+    fontSize: 16,
   },
 
   filterRow: {
