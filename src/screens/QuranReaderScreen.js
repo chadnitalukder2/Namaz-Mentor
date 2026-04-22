@@ -13,17 +13,20 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
-import { AL_FATIHAH_AYAHS, SURAHS } from '../constants/data';
-import { fetchSurahAudioUrls } from '../services/quranApi';
+import { SURAHS } from '../constants/data';
+import { fetchSurahAyahs, fetchSurahAudioUrls } from '../services/quranApi';
 import { saveQuranProgress } from '../utils/quranProgress';
 
 export default function QuranReaderScreen({ navigation, route }) {
   const surah = route?.params?.surah || { id: 1, name: 'Al-Fatihah', translation: 'The Opening' };
   const initialAyah = route?.params?.initialAyah;
-  const ayahs = surah.id === 1 ? AL_FATIHAH_AYAHS : AL_FATIHAH_AYAHS;
 
   const meta = useMemo(() => SURAHS.find((s) => s.id === surah.id), [surah.id]);
-  const totalAyahs = surah.ayahs ?? meta?.ayahs ?? ayahs.length;
+  const [ayahs, setAyahs] = useState([]);
+  const [textLoading, setTextLoading] = useState(true);
+  const [textError, setTextError] = useState(null);
+
+  const totalAyahs = ayahs.length > 0 ? ayahs.length : surah.ayahs ?? meta?.ayahs ?? 0;
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -36,6 +39,7 @@ export default function QuranReaderScreen({ navigation, route }) {
   const canPlayAudio = audioUrls.length > 0 && !audioLoading;
 
   useEffect(() => {
+    if (ayahs.length === 0) return;
     if (initialAyah != null && initialAyah >= 1) {
       setCurrentIndex(Math.min(Math.max(0, initialAyah - 1), ayahs.length - 1));
     } else {
@@ -44,8 +48,33 @@ export default function QuranReaderScreen({ navigation, route }) {
   }, [surah.id, initialAyah, ayahs.length]);
 
   useEffect(() => {
+    let cancelled = false;
+    setTextLoading(true);
+    setTextError(null);
+    setAyahs([]);
+    setCurrentIndex(0);
+    (async () => {
+      try {
+        const list = await fetchSurahAyahs(surah.id);
+        if (!cancelled) setAyahs(list);
+      } catch (e) {
+        if (!cancelled) {
+          setTextError(e?.message || 'Could not load ayahs');
+          setAyahs([]);
+        }
+      } finally {
+        if (!cancelled) setTextLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [surah.id]);
+
+  useEffect(() => {
+    if (ayahs.length === 0) return;
     saveQuranProgress({ surahNumber: surah.id, ayahNumber: currentIndex + 1 });
-  }, [surah.id, currentIndex]);
+  }, [surah.id, currentIndex, ayahs.length]);
 
   useEffect(() => {
     Audio.setAudioModeAsync({
@@ -135,10 +164,12 @@ export default function QuranReaderScreen({ navigation, route }) {
   }, [stopAndUnloadSound]);
 
   const goPrev = useCallback(() => {
+    if (ayahs.length === 0) return;
     setCurrentIndex((i) => Math.max(0, i - 1));
-  }, []);
+  }, [ayahs.length]);
 
   const goNext = useCallback(() => {
+    if (ayahs.length === 0) return;
     setCurrentIndex((i) => Math.min(ayahs.length - 1, i + 1));
   }, [ayahs.length]);
 
@@ -174,8 +205,9 @@ export default function QuranReaderScreen({ navigation, route }) {
             <Text style={styles.surahTitle} numberOfLines={1}>
               {surah.name}
             </Text>
-            <Text style={styles.surahSubtitle} numberOfLines={1}>
-              {surah.translation} · {totalAyahs} Ayahs
+            <Text style={styles.surahSubtitle} numberOfLines={2}>
+              {surah.translation} · {totalAyahs || '…'} Ayahs
+              {textLoading ? ' · Loading text…' : textError ? ` · ${textError}` : ''}
               {audioLoading ? ' · Loading audio…' : audioError ? ` · ${audioError}` : ''}
             </Text>
           </View>
@@ -196,6 +228,18 @@ export default function QuranReaderScreen({ navigation, route }) {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {textLoading && ayahs.length === 0 ? (
+            <View style={styles.textStateWrap}>
+              <ActivityIndicator size="large" color={Colors.gold} />
+              <Text style={styles.textStateHint}>Loading ayahs…</Text>
+            </View>
+          ) : null}
+          {!textLoading && textError && ayahs.length === 0 ? (
+            <View style={styles.textStateWrap}>
+              <Ionicons name="alert-circle-outline" size={40} color={Colors.textMuted} />
+              <Text style={styles.textStateHint}>{textError}</Text>
+            </View>
+          ) : null}
           {ayahs.map((ayah, index) => {
             const isCurrent = index === currentIndex;
             const CardInner = (
@@ -254,7 +298,8 @@ export default function QuranReaderScreen({ navigation, route }) {
           <View style={styles.bottomMeta}>
             <Text style={styles.bottomMetaLabel}>Ayah</Text>
             <Text style={styles.bottomMetaValue}>
-              {ayahs[currentIndex]?.number ?? 1} / {totalAyahs}
+              {ayahs.length > 0 ? ayahs[Math.min(currentIndex, ayahs.length - 1)]?.number ?? currentIndex + 1 : '—'}{' '}
+              / {totalAyahs || '—'}
             </Text>
           </View>
           <View style={styles.bottomControls}>
@@ -379,6 +424,20 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.md,
     gap: Spacing.sm + 4,
     paddingBottom: Spacing.lg,
+    flexGrow: 1,
+  },
+  textStateWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.lg * 2,
+    gap: Spacing.md,
+  },
+  textStateHint: {
+    ...Fonts.regular,
+    fontSize: 14,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    paddingHorizontal: Spacing.lg,
   },
 
   ayahCardBorder: {

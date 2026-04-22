@@ -534,8 +534,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
-    paddingHorizontal: 4,
-    borderBottomWidth: 1,
+    paddingHorizontal: 12,
     backgroundColor: Colors.backgroundMedium,
     borderRadius: Radius.lg,
     gap: Spacing.sm ,
@@ -548,8 +547,8 @@ const styles = StyleSheet.create({
   numberBadge: {
     width: 46,
     height: 46,
-    backgroundColor: Colors.backgroundMedium,
-    borderRadius: 12,
+    backgroundColor: 'rgba(2, 18, 38, 1)',
+    borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -557,7 +556,6 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 50,
-    backgroundColor: 'rgba(2, 18, 38, 1)',
   },
   surahNumber: {
     position: 'absolute',
@@ -569,12 +567,12 @@ const styles = StyleSheet.create({
   },
   surahInfo: { flex: 1 },
   surahName: {
-    ...Fonts.bold,
     fontSize: 16,
     color: Colors.textWhite,
   },
   surahNameCompact: {
-    fontSize: 15,
+    fontSize: 16,
+    fontWeight: '500',
   },
   surahTranslation: {
     ...Fonts.regular,

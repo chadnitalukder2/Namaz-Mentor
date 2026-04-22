@@ -44,3 +44,46 @@ export async function fetchSurahAudioUrls(surahNumber, editionId = 'ar.alafasy')
 
   return json.data.ayahs.map((a) => a.audio).filter(Boolean);
 }
+
+/**
+ * Ayah rows for the reader UI: Arabic (Uthmani), English (Sahih Intl.), optional transliteration.
+ * @param {number} surahNumber 1–114
+ * @returns {Promise<Array<{ number: number, arabic: string, translation: string, transliteration: string }>>}
+ */
+export async function fetchSurahAyahs(surahNumber) {
+  const arUrl = `${BASE_URL}/surah/${surahNumber}/quran-uthmani`;
+  const enUrl = `${BASE_URL}/surah/${surahNumber}/en.sahih`;
+  const trUrl = `${BASE_URL}/surah/${surahNumber}/en.transliteration`;
+
+  const [arRes, enRes] = await Promise.all([fetch(arUrl), fetch(enUrl)]);
+  const [arJson, enJson] = await Promise.all([
+    arRes.json().catch(() => ({})),
+    enRes.json().catch(() => ({})),
+  ]);
+
+  if (!arRes.ok || arJson.code !== 200 || !Array.isArray(arJson.data?.ayahs)) {
+    const msg =
+      arJson?.status || arJson?.data || arRes.statusText || 'Could not load Arabic text for this surah';
+    throw new Error(typeof msg === 'string' ? msg : 'Could not load Arabic text for this surah');
+  }
+
+  const enAyahs = enRes.ok && enJson.code === 200 && Array.isArray(enJson.data?.ayahs) ? enJson.data.ayahs : [];
+
+  let trAyahs = [];
+  try {
+    const trRes = await fetch(trUrl);
+    const trJson = await trRes.json().catch(() => ({}));
+    if (trRes.ok && trJson.code === 200 && Array.isArray(trJson.data?.ayahs)) {
+      trAyahs = trJson.data.ayahs;
+    }
+  } catch {
+    trAyahs = [];
+  }
+
+  return arJson.data.ayahs.map((a, idx) => ({
+    number: a.numberInSurah ?? a.number ?? idx + 1,
+    arabic: a.text ?? '',
+    translation: enAyahs[idx]?.text ?? '',
+    transliteration: trAyahs[idx]?.text ?? '',
+  }));
+}
