@@ -177,7 +177,8 @@ export default function HomeScreen({ navigation }) {
 
       <View style={styles.sheet}>
         <ScrollView
-          contentContainerStyle={styles.prayerList}
+          style={styles.prayerListScroll}
+          contentContainerStyle={[styles.prayerList, styles.prayerListContent]}
           showsVerticalScrollIndicator={false}
         >
           {prayers.map((prayer) => (
@@ -348,13 +349,21 @@ const styles = StyleSheet.create({
 
   sheet: {
     flex: 1,
+    minHeight: 0,
     backgroundColor: Colors.backgroundDark,
     paddingTop: 8,
+  },
+  prayerListScroll: {
+    flex: 1,
   },
   prayerList: {
     paddingHorizontal: 14,
     gap: 12,
     paddingBottom: Spacing.sm,
+  },
+  prayerListContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-end',
   },
   tabBarWrapper: {
     paddingBottom: 12,

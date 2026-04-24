@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
 import { SURAHS as FALLBACK_SURAHS } from '../constants/data';
 import { JUZ_FIRST_SURAH_NUMBER } from '../constants/quranJuz';
-import { fetchAllSurahs } from '../services/quranApi';
+import { fetchAllSurahs, fetchJuzReferences } from '../services/quranApi';
 import { getQuranProgress } from '../utils/quranProgress';
 import MainTabBar from '../components/MainTabBar';
 import { TabQuranIcon } from '../components/MainTabIcons';
@@ -27,6 +27,7 @@ export default function QuranScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('surah');
   const [search, setSearch] = useState('');
   const [surahs, setSurahs] = useState([]);
+  const [juzRefs, setJuzRefs] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
@@ -39,11 +40,16 @@ export default function QuranScreen({ navigation }) {
   const loadSurahs = useCallback(async () => {
     setError(null);
     try {
-      const list = await fetchAllSurahs();
+      const [list, juzList] = await Promise.all([
+        fetchAllSurahs(),
+        fetchJuzReferences().catch(() => null),
+      ]);
       setSurahs(list);
+      setJuzRefs(juzList);
     } catch (e) {
       setError(e?.message || 'Something went wrong');
       setSurahs((prev) => (prev.length > 0 ? prev : FALLBACK_SURAHS));
+      setJuzRefs(null);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -92,13 +98,26 @@ export default function QuranScreen({ navigation }) {
 
   const juzRows = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return JUZ_FIRST_SURAH_NUMBER.map((startSurahId, index) => {
-      const juzNum = index + 1;
-      const startSurah = surahs.find((s) => s.id === startSurahId);
+    const base =
+      juzRefs ||
+      JUZ_FIRST_SURAH_NUMBER.map((startSurahId, index) => ({
+        juzNum: index + 1,
+        startSurahId,
+        startAyah: 1,
+      }));
+    return base.map((ref) => {
+      const startSurah = surahs.find((s) => s.id === ref.startSurahId);
+      const ayahPart = ref.startAyah > 1 ? ` · Ayah ${ref.startAyah}` : '';
       const subtitle = startSurah
-        ? `Starts at ${startSurah.name}`
-        : `Surah ${startSurahId}`;
-      return { juzNum, startSurahId, startSurah, subtitle };
+        ? `Starts at ${startSurah.name}${ayahPart}`
+        : `Surah ${ref.startSurahId}${ayahPart}`;
+      return {
+        juzNum: ref.juzNum,
+        startSurahId: ref.startSurahId,
+        startAyah: ref.startAyah,
+        startSurah,
+        subtitle,
+      };
     }).filter((row) => {
       if (!q) return true;
       if (`juz ${row.juzNum}`.includes(q)) return true;
@@ -107,7 +126,7 @@ export default function QuranScreen({ navigation }) {
       if (row.startSurah?.translation?.toLowerCase().includes(q)) return true;
       return false;
     });
-  }, [surahs, search]);
+  }, [surahs, search, juzRefs]);
 
   return (
     <View style={styles.container}>
@@ -297,6 +316,7 @@ export default function QuranScreen({ navigation }) {
                           id: row.startSurahId,
                           name: `Surah ${row.startSurahId}`,
                           translation: '',
+                          ayahs: undefined,
                         };
                       navigation?.navigate('QuranReader', {
                         surah: {
@@ -305,6 +325,7 @@ export default function QuranScreen({ navigation }) {
                           translation: s.translation,
                           ayahs: s.ayahs,
                         },
+                        initialAyah: row.startAyah,
                       });
                     }}
                   >
