@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -23,6 +24,11 @@ import AsrPrayerIcon from '../components/AsrPrayerIcon';
 import MaghribPrayerIcon from '../components/MaghribPrayerIcon';
 import IshaPrayerIcon from '../components/IshaPrayerIcon';
 import { timingToLocalDate } from '../utils/prayerTimes';
+import {
+  reschedulePrayerNotifications,
+  loadPrayerNotificationSettings,
+  isPrayerAdhanSoundOn,
+} from '../services/prayerNotifications';
 
 const TOP_SECTION_PADDING = 14;
 
@@ -38,10 +44,21 @@ export default function HomeScreen({ navigation }) {
   const { prayers, nextPrayer, nextPrayerAt, locationLabel, loading } = usePrayerTimes();
   const { width } = useWindowDimensions();
   const isCompact = width < 360;
-  const locationMaxWidth = Math.max(130, width - 110);
+  const locationMaxWidth = Math.max(80, width - 200);
   const androidTopInset =
     Platform.OS === 'android' ? Math.max(StatusBar.currentHeight || 0, 24) : 0;
   const [selectedPrayerId, setSelectedPrayerId] = useState(null);
+  const [notifySettings, setNotifySettings] = useState(null);
+
+  const refreshNotifySettings = useCallback(() => {
+    loadPrayerNotificationSettings().then(setNotifySettings).catch(() => setNotifySettings(null));
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshNotifySettings();
+    }, [refreshNotifySettings])
+  );
 
   const displayLocation = (locationLabel || 'Finding location...')
     .split('·')[0]
@@ -93,6 +110,24 @@ export default function HomeScreen({ navigation }) {
     setSelectedPrayerId(prayers[nextIndex].id);
   };
 
+  const timingsSignature =
+    prayers.length > 0 ? prayers.map((p) => `${p.id}:${p.rawTime}`).join('|') : '';
+
+  useEffect(() => {
+    if (Platform.OS === 'web' || loading || !timingsSignature) return;
+    reschedulePrayerNotifications(prayers).catch(() => {});
+    // timingsSignature fingerprints raw timings; avoid `prayers` ref (updates every second from hook).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, timingsSignature]);
+
+  const openNotificationSettings = () => {
+    if (!selectedPrayer) return;
+    navigation?.navigate('NotificationSettings', {
+      prayer: selectedPrayer.name,
+      prayerId: selectedPrayer.id,
+    });
+  };
+
   return (
     <View style={styles.root}>
       <StatusBar
@@ -125,6 +160,16 @@ export default function HomeScreen({ navigation }) {
               />
             ) : null}
           </View>
+          <TouchableOpacity
+            style={styles.headerNotifyLink}
+            onPress={openNotificationSettings}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Open notification settings for this prayer"
+          >
+            <Text style={styles.headerNotifyText}>Notification</Text>
+            <MaterialCommunityIcons name="bell-outline" size={18} color="#B8C5D6" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.heroRow}>
@@ -164,8 +209,10 @@ export default function HomeScreen({ navigation }) {
             </View>
           </View>
 
-          <View style={styles.heroIconWrap}>
-            <HomeHeroMosqueIcon size={isCompact ? 102 : 114} />
+          <View style={styles.heroRightColumn}>
+            <View style={styles.heroIconWrap}>
+              <HomeHeroMosqueIcon size={isCompact ? 102 : 114} />
+            </View>
           </View>
         </View>
 
@@ -187,6 +234,9 @@ export default function HomeScreen({ navigation }) {
               prayer={prayer}
               isNext={prayer.id === nextPrayer?.id}
               isSelected={prayer.id === selectedPrayer?.id}
+              adhanSoundOn={
+                notifySettings ? isPrayerAdhanSoundOn(notifySettings, prayer.id) : false
+              }
             />
           ))}
         </ScrollView>
@@ -212,21 +262,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   header: {
-    alignItems: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
     backgroundColor: 'rgba(2, 18, 38, 1)',
     paddingTop: 20,
     paddingHorizontal: 20,
-    paddingBottom: 0,
+    paddingBottom: 10,
   },
   locationPill: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    alignSelf: 'flex-start',
+    minWidth: 0,
     paddingVertical: 4,
     paddingRight: 8,
     paddingLeft: 0,
     borderRadius: Radius.round,
+  },
+  headerNotifyLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexShrink: 0,
+    paddingVertical: 4,
+    paddingLeft: 8,
+  },
+  headerNotifyText: {
+    ...Fonts.medium,
+    fontSize: 14,
+    color: Colors.textWhite,
   },
   locationText: {
     ...Fonts.semiBold,
@@ -313,6 +380,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(2, 18, 38, 0.35)',
   },
+  heroRightColumn: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
   heroIconWrap: {
     width: 114,
     height: 114,
@@ -371,7 +442,7 @@ const styles = StyleSheet.create({
   },
 });
 
-function PrayerRow({ prayer, isNext, isSelected }) {
+function PrayerRow({ prayer, isNext, isSelected, adhanSoundOn }) {
   const PrayerIcon = PRAYER_SVG_ICONS[prayer.icon];
 
   return (
@@ -407,6 +478,8 @@ function PrayerRow({ prayer, isNext, isSelected }) {
             size={20}
             color="#00E58A"
           />
+        ) : adhanSoundOn ? (
+          <MaterialCommunityIcons name="volume-high" size={20} color={Colors.gold} />
         ) : (
           <MaterialCommunityIcons name="volume-off" size={20} color="#5E7EA0" />
         )}

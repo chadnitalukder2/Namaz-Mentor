@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -8,108 +9,181 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
+  Platform,
+  Pressable,
 } from 'react-native';
-import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Colors, Fonts, Radius } from '../constants/theme';
+import {
+  loadPrayerNotificationSettings,
+  updatePrayerNotificationSetting,
+  reschedulePrayerNotifications,
+  requestNotificationPermissions,
+} from '../services/prayerNotifications';
+import { fetchAdhanRelatedAudioFromApi } from '../services/adhanApi';
+
+function mainRowSubtitle(soundMode) {
+  if (soundMode === 'silent') return 'Notification without sound';
+  return 'Play Adhan with sound';
+}
+
+function RadioDot({ selected }) {
+  return (
+    <View style={[styles.radio, selected && styles.radioActive]}>
+      {selected ? <View style={styles.radioDot} /> : null}
+    </View>
+  );
+}
 
 export default function NotificationSettingsScreen({ navigation, route }) {
+  const prayerId = route?.params?.prayerId || 'fajr';
   const prayerName = route?.params?.prayer || 'Fajr';
 
   const [notificationEnabled, setNotificationEnabled] = useState(true);
-  const [soundMode, setSoundMode] = useState('azaan'); // 'azaan' | 'silent'
+  const [soundMode, setSoundMode] = useState('azaan');
+
+  const refreshFromStorage = useCallback(async () => {
+    const all = await loadPrayerNotificationSettings();
+    const s = all[prayerId];
+    setNotificationEnabled(s.enabled);
+    setSoundMode(s.soundMode === 'silent' ? 'silent' : 'azaan');
+    fetchAdhanRelatedAudioFromApi().catch(() => {});
+  }, [prayerId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshFromStorage();
+    }, [refreshFromStorage])
+  );
+
+  const persistAndReschedule = async (partial) => {
+    await updatePrayerNotificationSetting(prayerId, partial);
+    // Reschedule can be slow; never block returning after settings are saved.
+    reschedulePrayerNotifications().catch(() => {});
+  };
+
+  const goBack = () => {
+    if (navigation?.canGoBack?.()) {
+      navigation.goBack();
+    } else {
+      navigation?.navigate('Home');
+    }
+  };
+
+  const onMainToggle = async (value) => {
+    setNotificationEnabled(value);
+    if (value && Platform.OS !== 'web') {
+      await requestNotificationPermissions();
+    }
+    await persistAndReschedule({ enabled: value });
+  };
+
+  const selectAzaan = async () => {
+    if (!notificationEnabled) return;
+    setSoundMode('azaan');
+    await persistAndReschedule({ soundMode: 'azaan' });
+  };
+
+  const selectSilent = async () => {
+    if (!notificationEnabled) return;
+    setSoundMode('silent');
+    await persistAndReschedule({ soundMode: 'silent' });
+  };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundDark} />
 
-      {/* Bottom sheet style drag handle */}
       <View style={styles.dragHandle} />
 
-      {/* Header */}
       <SafeAreaView>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation?.goBack()} style={styles.backBtn}>
-            <Text style={styles.backIcon}>‹</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>Notification for {prayerName}</Text>
+          <Pressable
+            onPress={goBack}
+            style={({ pressed }) => [styles.headerSide, pressed && styles.headerSidePressed]}
+            hitSlop={16}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <MaterialCommunityIcons name="chevron-left" size={30} color={Colors.textWhite} />
+          </Pressable>
+          <View style={styles.headerTitleWrap} pointerEvents="none">
+            <Text style={styles.title} numberOfLines={1}>
+              Notification for {prayerName}
+            </Text>
+          </View>
+          <View style={styles.headerSide} />
         </View>
       </SafeAreaView>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-        {/* Notification toggle */}
         <View style={styles.card}>
           <View style={styles.toggleRow}>
             <View style={styles.toggleLeft}>
               <View style={styles.iconBg}>
-                <Text style={styles.rowIcon}>🔔</Text>
+                <MaterialCommunityIcons name="bell-outline" size={22} color={Colors.textWhite} />
               </View>
-              <View>
+              <View style={styles.toggleTextWrap}>
                 <Text style={styles.rowLabel}>Notification</Text>
-                <Text style={styles.rowSub}>Banner alert with default sound</Text>
+                <Text style={styles.rowSub}>{mainRowSubtitle(soundMode)}</Text>
               </View>
             </View>
             <Switch
               value={notificationEnabled}
-              onValueChange={setNotificationEnabled}
+              onValueChange={onMainToggle}
               trackColor={{ false: '#333', true: Colors.gold }}
               thumbColor={Colors.textWhite}
             />
           </View>
         </View>
 
-        {/* Sound Mode */}
-        <Text style={styles.sectionTitle}>Sound Mode</Text>
+        <Text style={styles.sectionTitle}>Sound mode</Text>
         <View style={styles.card}>
-          {/* Azaan option */}
           <TouchableOpacity
-            style={styles.soundRow}
-            onPress={() => setSoundMode('azaan')}
-            activeOpacity={0.7}
+            style={[styles.radioRow, !notificationEnabled && styles.radioRowDisabled]}
+            onPress={selectAzaan}
+            activeOpacity={0.75}
+            disabled={!notificationEnabled}
           >
             <View style={styles.toggleLeft}>
               <View style={styles.iconBg}>
-                <Text style={styles.rowIcon}>🕌</Text>
+                <MaterialCommunityIcons name="volume-high" size={22} color={Colors.textWhite} />
               </View>
-              <View>
+              <View style={styles.toggleTextWrap}>
                 <Text style={styles.rowLabel}>Azaan</Text>
                 <Text style={styles.rowSub}>Play call to prayer</Text>
               </View>
             </View>
-            <View style={[styles.radio, soundMode === 'azaan' && styles.radioActive]}>
-              {soundMode === 'azaan' && <View style={styles.radioDot} />}
-            </View>
+            <RadioDot selected={soundMode === 'azaan'} />
           </TouchableOpacity>
 
           <View style={styles.divider} />
 
-          {/* Silent option */}
           <TouchableOpacity
-            style={styles.soundRow}
-            onPress={() => setSoundMode('silent')}
-            activeOpacity={0.7}
+            style={[styles.radioRow, !notificationEnabled && styles.radioRowDisabled]}
+            onPress={selectSilent}
+            activeOpacity={0.75}
+            disabled={!notificationEnabled}
           >
             <View style={styles.toggleLeft}>
               <View style={styles.iconBg}>
-                <Text style={styles.rowIcon}>🔕</Text>
+                <MaterialCommunityIcons name="volume-off" size={22} color={Colors.textWhite} />
               </View>
-              <View>
+              <View style={styles.toggleTextWrap}>
                 <Text style={styles.rowLabel}>Silent Mode</Text>
                 <Text style={styles.rowSub}>Notification without sound</Text>
               </View>
             </View>
-            <View style={[styles.radio, soundMode === 'silent' && styles.radioActive]}>
-              {soundMode === 'silent' && <View style={styles.radioDot} />}
-            </View>
+            <RadioDot selected={soundMode === 'silent'} />
           </TouchableOpacity>
         </View>
 
-        {/* Note */}
         <View style={styles.noteCard}>
           <Text style={styles.noteText}>
-            Note: Azaan and Silent Mode cannot be enabled at the same time. Selecting one will automatically disable the other.
+            Note: Azaan and Silent Mode cannot be enabled at the same time. Choose one sound
+            preference for your prayer notifications.
           </Text>
         </View>
-
       </ScrollView>
     </View>
   );
@@ -134,30 +208,33 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.07)',
   },
-  backBtn: {
-    width: 32,
-    height: 32,
+  headerSide: {
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 2,
   },
-  backIcon: {
-    fontSize: 32,
-    color: Colors.textWhite,
-    lineHeight: 32,
-    marginTop: -6,
+  headerSidePressed: {
+    opacity: 0.7,
+  },
+  headerTitleWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    minWidth: 0,
   },
   title: {
-    flex: 1,
-    textAlign: 'center',
-    marginLeft: -32,
     ...Fonts.bold,
-    fontSize: 18,
+    fontSize: 17,
     color: Colors.textWhite,
+    textAlign: 'center',
   },
   scrollContent: {
     padding: 20,
@@ -177,17 +254,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
   },
-  soundRow: {
+  radioRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
+  },
+  radioRowDisabled: {
+    opacity: 0.45,
   },
   toggleLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
     flex: 1,
+    minWidth: 0,
+  },
+  toggleTextWrap: {
+    flex: 1,
+    minWidth: 0,
   },
   iconBg: {
     width: 48,
@@ -197,7 +282,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rowIcon: { fontSize: 22 },
   rowLabel: {
     ...Fonts.bold,
     fontSize: 15,
@@ -212,8 +296,10 @@ const styles = StyleSheet.create({
 
   sectionTitle: {
     ...Fonts.medium,
-    fontSize: 15,
+    fontSize: 12,
+    letterSpacing: 0.6,
     color: Colors.textGrey,
+    textTransform: 'uppercase',
   },
 
   radio: {

@@ -12,7 +12,8 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.namazmentor.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "We use your location to calculate accurate prayer times and Qibla direction."
+        "NSLocationWhenInUseUsageDescription": "We use your location to calculate accurate prayer times and Qibla direction.",
+        "NSUserNotificationsUsageDescription": "Namaz Mentor uses notifications to remind you when each prayer begins."
       }
     },
     "android": {
@@ -24,11 +25,20 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE"
+        "VIBRATE",
+        "POST_NOTIFICATIONS"
       ]
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "sounds": [
+            "./assets/sounds/adhan.wav"
+          ]
+        }
+      ]
     ]
   }
 }

@@ -5,7 +5,9 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
+  Platform,
 } from 'react-native';
+import { requestNotificationPermissions } from '../services/prayerNotifications';
 import { Colors, Fonts, Spacing } from '../constants/theme';
 import { PrimaryButton, GhostButton, DotIndicator } from '../components/UIComponents';
 import NotificationBellIllustration from '../components/NotificationBellIllustration';
@@ -33,7 +35,12 @@ export default function NotificationPermissionScreen({ navigation }) {
       <View style={styles.bottomSection}>
         <PrimaryButton
           title="Enable Notifications"
-          onPress={() => navigation?.navigate('Home')}
+          onPress={async () => {
+            if (Platform.OS !== 'web') {
+              await requestNotificationPermissions();
+            }
+            navigation?.navigate('Home');
+          }}
         />
 
         <GhostButton
