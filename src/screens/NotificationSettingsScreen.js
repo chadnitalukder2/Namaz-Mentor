@@ -22,6 +22,8 @@ import {
 } from '../services/prayerNotifications';
 import { fetchAdhanRelatedAudioFromApi } from '../services/adhanApi';
 import NotificationBellRowIcon from '../components/NotificationBellRowIcon';
+import AzaanRowIcon from '../components/AzaanRowIcon';
+import SilentModeRowIcon from '../components/SilentModeRowIcon';
 
 function mainRowSubtitle(soundMode) {
   if (soundMode === 'silent') return 'Notification without sound';
@@ -148,7 +150,7 @@ export default function NotificationSettingsScreen({ navigation, route }) {
           >
             <View style={styles.toggleLeft}>
               <View style={styles.iconBg}>
-                <MaterialCommunityIcons name="volume-high" size={22} color={Colors.textWhite} />
+                <AzaanRowIcon size={22} />
               </View>
               <View style={styles.toggleTextWrap}>
                 <Text style={styles.rowLabel}>Azaan</Text>
@@ -168,7 +170,7 @@ export default function NotificationSettingsScreen({ navigation, route }) {
           >
             <View style={styles.toggleLeft}>
               <View style={styles.iconBg}>
-                <MaterialCommunityIcons name="volume-off" size={22} color={Colors.textWhite} />
+                <SilentModeRowIcon size={22} />
               </View>
               <View style={styles.toggleTextWrap}>
                 <Text style={styles.rowLabel}>Silent Mode</Text>
