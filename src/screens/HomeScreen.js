@@ -23,6 +23,7 @@ import DhuhrPrayerIcon from '../components/DhuhrPrayerIcon';
 import AsrPrayerIcon from '../components/AsrPrayerIcon';
 import MaghribPrayerIcon from '../components/MaghribPrayerIcon';
 import IshaPrayerIcon from '../components/IshaPrayerIcon';
+import NotificationBellRowIcon from '../components/NotificationBellRowIcon';
 import { timingToLocalDate } from '../utils/prayerTimes';
 import {
   reschedulePrayerNotifications,
@@ -168,7 +169,7 @@ export default function HomeScreen({ navigation }) {
             accessibilityLabel="Open notification settings for this prayer"
           >
             <Text style={styles.headerNotifyText}>Notification</Text>
-            <MaterialCommunityIcons name="bell-outline" size={18} color="#B8C5D6" />
+            <NotificationBellRowIcon size={18} />
           </TouchableOpacity>
         </View>
 
