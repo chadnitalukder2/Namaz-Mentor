@@ -41,10 +41,10 @@ export const Colors = {
 };
 
 export const Fonts = {
-  regular: { fontFamily: 'Inter', fontWeight: '400' },
-  medium: { fontFamily: 'Inter', fontWeight: '500' },
-  semiBold: { fontFamily: 'Inter', fontWeight: '600' },
-  bold: { fontFamily: 'Inter', fontWeight: '700' },
+  regular: { fontFamily: 'Inter_400Regular' },
+  medium: { fontFamily: 'Inter_500Medium' },
+  semiBold: { fontFamily: 'Inter_600SemiBold' },
+  bold: { fontFamily: 'Inter_700Bold' },
 };
 
 export const Spacing = {

@@ -136,7 +136,7 @@ export default function NotificationSettingsScreen({ navigation, route }) {
         </View>
 
         <Text style={styles.sectionTitle}>Sound mode</Text>
-        <View style={styles.card}>
+        <View style={styles.radioRowContainer}>
           <TouchableOpacity
             style={[styles.radioRow, !notificationEnabled && styles.radioRowDisabled]}
             onPress={selectAzaan}
@@ -154,8 +154,6 @@ export default function NotificationSettingsScreen({ navigation, route }) {
             </View>
             <RadioDot selected={soundMode === 'azaan'} />
           </TouchableOpacity>
-
-          <View style={styles.divider} />
 
           <TouchableOpacity
             style={[styles.radioRow, !notificationEnabled && styles.radioRowDisabled]}
@@ -244,6 +242,13 @@ const styles = StyleSheet.create({
     backgroundColor:'rgba(6, 24, 47, 1)',
     borderRadius: Radius.md,
     overflow: 'hidden',
+    gap: 16,
+  },
+
+  radioRowContainer: {
+    gap: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
 
   toggleRow: {
@@ -257,6 +262,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
+    borderRadius: 16,
+    backgroundColor: 'rgba(6, 24, 47, 1)',
   },
   radioRowDisabled: {
     opacity: 0.45,
@@ -282,21 +289,21 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     ...Fonts.bold,
-    fontSize: 15,
-    color: Colors.textWhite,
+    fontSize: 16,
+    color: 'rgba(245, 247, 250, 1)',
   },
   rowSub: {
     ...Fonts.regular,
     fontSize: 13,
-    color: Colors.textMuted,
-    marginTop: 2,
+    color: 'rgba(166, 150, 119, 1)',
+    marginTop: 8,
   },
 
   sectionTitle: {
-    ...Fonts.medium,
-    fontSize: 12,
+    ...Fonts.semiBold,
+    fontSize: 14,
     letterSpacing: 0.6,
-    color: Colors.textGrey,
+    color: 'rgba(142, 143, 157, 1)',
     textTransform: 'uppercase',
   },
 
@@ -326,16 +333,17 @@ const styles = StyleSheet.create({
   },
 
   noteCard: {
-    backgroundColor: 'rgba(217,170,85,0.08)',
+    backgroundColor: 'rgba(6, 24, 47, 1)',
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(217,170,85,0.2)',
+    borderColor: 'rgba(166, 150, 119, 0.13)',
     padding: 16,
+    marginTop: 20,
   },
   noteText: {
     ...Fonts.regular,
     fontSize: 13,
-    color: Colors.textGrey,
+    color: 'rgba(142, 143, 157, 1)',
     lineHeight: 20,
   },
 });
