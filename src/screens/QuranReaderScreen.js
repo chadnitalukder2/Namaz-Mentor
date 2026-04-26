@@ -12,10 +12,66 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
+import Svg, { Defs, Path, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
 import { SURAHS } from '../constants/data';
 import { fetchSurahAyahs, fetchSurahAudioUrls } from '../services/quranApi';
 import { saveQuranProgress } from '../utils/quranProgress';
+
+function AyahBadgeIcon({ size = 50 }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+      <Path
+        d="M37.8112 18.6236L33.1251 13.9374V7.30997C33.1251 6.72312 32.6493 6.24736 32.0625 6.24736H25.435L20.7489 1.56118C20.334 1.14627 19.6611 1.14627 19.2461 1.56118L14.5599 6.24736H7.93254C7.3457 6.24736 6.86993 6.72312 6.86993 7.30997V13.9374L2.18369 18.6236C1.7721 19.0193 1.7721 19.7307 2.18369 20.1264L6.86993 24.8125V31.44C6.86993 32.0268 7.3457 32.5026 7.93254 32.5026H14.5599L19.2461 37.1887C19.661 37.6038 20.3339 37.6037 20.7489 37.1887L25.4351 32.5026H32.0625C32.6493 32.5026 33.1251 32.0268 33.1251 31.44V24.8126L37.8112 20.1264C38.2263 19.7114 38.2263 19.0385 37.8112 18.6236ZM31.3111 23.6211C31.1119 23.8203 30.9999 24.0906 30.9999 24.3724V30.3773H24.995C24.7131 30.3773 24.4429 30.4892 24.2436 30.6886L19.9975 34.9347L15.7514 30.6886C15.5521 30.4893 15.2818 30.3773 15 30.3773H8.99515V24.3724C8.99515 24.0905 8.88315 23.8203 8.68387 23.6211L4.43783 19.375L8.68387 15.129C8.88315 14.9298 8.99515 14.6595 8.99515 14.3777V8.37272H15C15.2818 8.37272 15.5521 8.26079 15.7514 8.06144L19.9975 3.8154L24.2435 8.06144C24.4427 8.26072 24.713 8.37272 24.9948 8.37272H30.9998V14.3776C30.9998 14.6595 31.1117 14.9297 31.3111 15.1289L35.5571 19.375L31.3111 23.6211Z"
+        fill="url(#ayahBadgeGradient)"
+      />
+      <Path
+        d="M24.0366 17.4623C23.4498 17.4623 22.974 17.938 22.974 18.5249V22.8461C22.9205 24.2538 20.903 24.2533 20.8488 22.847V18.5249C20.7966 17.1165 18.7754 17.1175 18.7236 18.5249V22.8463V22.847C18.669 24.2544 16.6514 24.2527 16.5984 22.8461V18.5202C16.6033 17.6291 15.542 17.1297 14.8587 17.7012L12.0251 20.0436C11.6864 20.3236 11.1833 20.302 10.9266 19.9967L10.1859 19.116C9.80816 18.6668 9.138 18.609 8.68873 18.9867C8.2396 19.3645 8.18173 20.0348 8.55945 20.4839L9.30009 21.3646C10.3092 22.5646 12.1392 22.7069 13.3792 21.6816L14.4731 20.7773V22.8461C14.4513 25.5821 17.7916 27.0506 19.7862 25.22C21.7971 27.0488 25.1091 25.5904 25.0992 22.8461V18.5249C25.0992 17.938 24.6235 17.4623 24.0366 17.4623Z"
+        fill="#D9AA55"
+      />
+      <Path
+        d="M27.7887 14.4161C27.2018 14.4161 26.7261 14.8919 26.7261 15.4787V24.9713C26.7784 26.3797 28.7995 26.3787 28.8513 24.9713V15.4787C28.8513 14.8919 28.3756 14.4161 27.7887 14.4161Z"
+        fill="#D9AA55"
+      />
+      <Path
+        d="M15.4765 14.5671L16.4245 15.2565C17.3965 15.9635 18.7027 15.9634 19.6747 15.2565L19.9977 15.0216L20.3207 15.2565C21.2927 15.9634 22.5988 15.9635 23.571 15.2565L24.5189 14.5671C24.9936 14.2219 25.0986 13.5573 24.7534 13.0827C24.4083 12.6081 23.7437 12.5031 23.269 12.8483L22.321 13.5378C22.0862 13.7084 21.8058 13.7086 21.5708 13.5378L20.6227 12.8483C20.2502 12.5773 19.7454 12.5773 19.3727 12.8483L18.4247 13.5378C18.1898 13.7086 17.9094 13.7085 17.6745 13.5378L16.7265 12.8483C16.2519 12.5031 15.5873 12.608 15.2422 13.0827C14.897 13.5573 15.0019 14.2219 15.4765 14.5671Z"
+        fill="#D9AA55"
+      />
+      <Path
+        d="M20.069 11.5825C20.6558 11.5825 21.1316 11.1068 21.1316 10.5199V9.8115C21.0793 8.40312 19.0581 8.40418 19.0063 9.8115V10.5199C19.0063 11.1068 19.4821 11.5825 20.069 11.5825Z"
+        fill="#D9AA55"
+      />
+      <Defs>
+        <SvgLinearGradient id="ayahBadgeGradient" x1="20.0024" y1="1.25089" x2="20.0004" y2="37.5" gradientUnits="userSpaceOnUse">
+          <Stop stopColor="#D7AE63" />
+          <Stop offset="0.278846" stopColor="#A68241" />
+          <Stop offset="1" stopColor="#5C3C01" />
+        </SvgLinearGradient>
+      </Defs>
+    </Svg>
+  );
+}
+
+function BackArrowIcon({ size = 24, color = '#F5F7FA' }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M11.9983 18.9974L4.99927 11.9984L11.9983 4.99931"
+        stroke={color}
+        strokeWidth={1.99973}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M18.9974 11.9984H4.99927"
+        stroke={color}
+        strokeWidth={1.99973}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
 
 export default function QuranReaderScreen({ navigation, route }) {
   const surah = route?.params?.surah || { id: 1, name: 'Al-Fatihah', translation: 'The Opening' };
@@ -199,7 +255,7 @@ export default function QuranReaderScreen({ navigation, route }) {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Ionicons name="chevron-back" size={26} color={Colors.textWhite} />
+            <BackArrowIcon size={24} color={Colors.textWhite} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.surahTitle} numberOfLines={1}>
@@ -211,13 +267,6 @@ export default function QuranReaderScreen({ navigation, route }) {
               {audioLoading ? ' · Loading audio…' : audioError ? ` · ${audioError}` : ''}
             </Text>
           </View>
-          <TouchableOpacity
-            style={styles.headerIconBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Bookmark"
-          >
-            <Ionicons name="bookmark-outline" size={22} color={Colors.gold} />
-          </TouchableOpacity>
         </View>
 
         <View style={styles.progressTrack}>
@@ -246,8 +295,8 @@ export default function QuranReaderScreen({ navigation, route }) {
               <View style={[styles.ayahCard, isCurrent && styles.ayahCardActive]}>
                 <View style={styles.ayahHeader}>
                   <View style={styles.ayahNumberBadge}>
-                    <Ionicons name="book-outline" size={20} color={Colors.textMuted} />
-                    <Text style={styles.ayahNumberText}>{ayah.number}</Text>
+                    <AyahBadgeIcon size={40} />
+                    {/* <Text style={styles.ayahNumberText}>{ayah.number}</Text> */}
                   </View>
                   <TouchableOpacity
                     hitSlop={12}
@@ -396,18 +445,17 @@ const styles = StyleSheet.create({
   surahTitle: {
     ...Fonts.bold,
     fontSize: 18,
-    color: Colors.textWhite,
+    color: 'rgba(255, 243, 223, 1)',
   },
   surahSubtitle: {
     ...Fonts.regular,
-    fontSize: 12,
-    color: Colors.textMuted,
+    fontSize: 13,
+    color: 'rgba(166, 150, 119, 1)',
     marginTop: 2,
   },
 
   progressTrack: {
     marginHorizontal: Spacing.md,
-    marginTop: Spacing.sm,
     height: 3,
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 2,
@@ -422,7 +470,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.md,
-    gap: Spacing.sm + 4,
+    gap: 16,
     paddingBottom: Spacing.lg,
     flexGrow: 1,
   },
@@ -445,13 +493,13 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   ayahCard: {
-    backgroundColor: Colors.backgroundMedium,
+    backgroundColor: 'rgba(6, 24, 47, 1)',
     borderRadius: Radius.md,
     padding: Spacing.md,
-    gap: Spacing.sm + 4,
+    gap: Spacing.sm + 6,
   },
   ayahCardActive: {
-    backgroundColor: Colors.backgroundCard,
+    backgroundColor: 'rgba(6, 24, 47, 1)',
   },
   ayahHeader: {
     flexDirection: 'row',
@@ -459,10 +507,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   ayahNumberBadge: {
-    width: 44,
-    height: 44,
-    backgroundColor: Colors.backgroundDark,
-    borderRadius: Radius.sm + 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -477,10 +521,10 @@ const styles = StyleSheet.create({
 
   arabicText: {
     ...Fonts.regular,
-    fontSize: 23,
-    color: Colors.textWarmCream,
+    fontSize: 24,
+    color: 'rgba(255, 255, 255, 1)',
     textAlign: 'right',
-    lineHeight: 40,
+    lineHeight: 48,
     letterSpacing: 0.5,
   },
   transliterationText: {
@@ -492,9 +536,9 @@ const styles = StyleSheet.create({
   },
   translationText: {
     ...Fonts.regular,
-    fontSize: 14,
-    color: Colors.textGrey,
-    lineHeight: 22,
+    fontSize: 16,
+    color: 'rgba(166, 150, 119, 1)',
+    lineHeight: 26,
   },
 
   bottomBar: {
