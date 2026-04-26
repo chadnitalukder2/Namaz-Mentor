@@ -3,7 +3,7 @@
 export const Colors = {
   // Backgrounds
   backgroundDark: '#021226',
-  backgroundMedium: '#06182f',
+  backgroundMedium: 'rgba(6, 24, 47, 1)',
   backgroundBlue: '#123859',
   backgroundCard: '#17446c',
 
@@ -32,6 +32,12 @@ export const Colors = {
   dotInactive: 'rgba(255,255,255,0.25)',
   dotActivePill: '#91AAC8',
   dotInactiveDark: '#414D5C',
+
+  /** Main notification row switch — gold track + teal thumb (design ref) */
+  notificationSwitchTrackOn: '#C4A35A',
+  notificationSwitchTrackOff: '#3D4555',
+  notificationSwitchThumbOn: '#3ABDA4',
+  notificationSwitchThumbOff: '#C8D0DA',
 };
 
 export const Fonts = {

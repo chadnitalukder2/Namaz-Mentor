@@ -21,6 +21,7 @@ import {
   requestNotificationPermissions,
 } from '../services/prayerNotifications';
 import { fetchAdhanRelatedAudioFromApi } from '../services/adhanApi';
+import NotificationBellRowIcon from '../components/NotificationBellRowIcon';
 
 function mainRowSubtitle(soundMode) {
   if (soundMode === 'silent') return 'Notification without sound';
@@ -121,7 +122,7 @@ export default function NotificationSettingsScreen({ navigation, route }) {
           <View style={styles.toggleRow}>
             <View style={styles.toggleLeft}>
               <View style={styles.iconBg}>
-                <MaterialCommunityIcons name="bell-outline" size={22} color={Colors.textWhite} />
+                <NotificationBellRowIcon size={22} />
               </View>
               <View style={styles.toggleTextWrap}>
                 <Text style={styles.rowLabel}>Notification</Text>
@@ -231,8 +232,8 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   title: {
-    ...Fonts.bold,
-    fontSize: 17,
+    ...Fonts.semiBold,
+    fontSize: 18,
     color: Colors.textWhite,
     textAlign: 'center',
   },
@@ -243,7 +244,7 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: Colors.backgroundMedium,
+    backgroundColor:'rgba(6, 24, 47, 1)',
     borderRadius: Radius.md,
     overflow: 'hidden',
   },
@@ -278,7 +279,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: Colors.backgroundCard,
+    backgroundColor: 'rgba(2, 18, 38, 1)',
     alignItems: 'center',
     justifyContent: 'center',
   },

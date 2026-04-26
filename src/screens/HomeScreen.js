@@ -174,12 +174,6 @@ export default function HomeScreen({ navigation }) {
 
         <View style={styles.heroRow}>
           <View style={styles.heroTextBlock}>
-            <View style={styles.upcomingPill}>
-              <MaterialCommunityIcons name="clock-outline" size={12} color={Colors.gold} />
-              <Text style={styles.upcomingPillText}>
-                Upcoming: {upcomingPrayer?.name || '--'} {upcomingPrayer?.time || '--:--'}
-              </Text>
-            </View>
             <Text style={[styles.nextPrayerName, isCompact && styles.nextPrayerNameCompact]}>
               {selectedPrayer?.name || '--'}
             </Text>
@@ -317,24 +311,6 @@ const styles = StyleSheet.create({
   heroTextBlock: {
     flex: 1,
     maxWidth: '62%',
-  },
-  upcomingPill: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Radius.round,
-    backgroundColor: 'rgba(217, 170, 85, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(217, 170, 85, 0.4)',
-    marginBottom: 6,
-  },
-  upcomingPillText: {
-    ...Fonts.medium,
-    fontSize: 11,
-    color: '#EED39D',
   },
   nextPrayerName: {
     ...Fonts.bold,
