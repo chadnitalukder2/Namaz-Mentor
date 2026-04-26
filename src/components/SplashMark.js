@@ -15,7 +15,6 @@ export default function SplashMark({ width = 79, height = 106 }) {
       height={height}
       viewBox="0 0 80 106"
       fill="none"
-      accessible
       accessibilityLabel="Namaz Mentor"
     >
       <Path d={P1} fill="url(#splashGrad0)" />

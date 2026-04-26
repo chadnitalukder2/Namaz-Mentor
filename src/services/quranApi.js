@@ -1,3 +1,5 @@
+import { JUZ_FIRST_SURAH_NUMBER } from '../constants/quranJuz';
+
 const BASE_URL = 'https://api.alquran.cloud/v1';
 
 /**
@@ -85,5 +87,18 @@ export async function fetchSurahAyahs(surahNumber) {
     arabic: a.text ?? '',
     translation: enAyahs[idx]?.text ?? '',
     transliteration: trAyahs[idx]?.text ?? '',
+  }));
+}
+
+/**
+ * Lightweight local juz references for the Juz tab.
+ * Keeps QuranScreen from failing when remote juz metadata is unavailable.
+ * @returns {Promise<Array<{ juzNum: number, startSurahId: number, startAyah: number }>>}
+ */
+export async function fetchJuzReferences() {
+  return JUZ_FIRST_SURAH_NUMBER.map((startSurahId, index) => ({
+    juzNum: index + 1,
+    startSurahId,
+    startAyah: 1,
   }));
 }

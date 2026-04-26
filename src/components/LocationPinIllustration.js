@@ -22,7 +22,6 @@ export default function LocationPinIllustration({
   return (
     <View
       style={[styles.row, { width: ring, height: ring, maxWidth: ring }]}
-      accessible
       accessibilityLabel="Location pin"
     >
       <View style={[styles.circle, { width: ring, height: ring, borderRadius: ring / 2 }]}>

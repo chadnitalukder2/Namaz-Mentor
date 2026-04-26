@@ -15,7 +15,6 @@ export default function WelcomeIllustration({ width, height }) {
       height={height}
       viewBox="0 0 350 64"
       fill="none"
-      accessible
       accessibilityLabel="Prayer figure mark"
     >
       <Path d={P1} fill="#D9AA55" />

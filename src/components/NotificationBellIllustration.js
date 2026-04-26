@@ -67,7 +67,6 @@ export default function NotificationBellIllustration({
     return (
       <View
         style={[styles.row, { width: size, height: size }]}
-        accessible
         accessibilityLabel="Notification bell"
       >
         {svg}
@@ -80,7 +79,6 @@ export default function NotificationBellIllustration({
   return (
     <View
       style={[styles.row, { width: ring, height: ring, maxWidth: ring }]}
-      accessible
       accessibilityLabel="Notification bell"
     >
       <View style={[styles.circle, { width: ring, height: ring, borderRadius: ring / 2 }]}>
