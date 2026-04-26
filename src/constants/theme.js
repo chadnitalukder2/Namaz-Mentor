@@ -33,11 +33,11 @@ export const Colors = {
   dotActivePill: '#91AAC8',
   dotInactiveDark: '#414D5C',
 
-  /** Main notification row switch — gold track + teal thumb (design ref) */
-  notificationSwitchTrackOn: '#C4A35A',
-  notificationSwitchTrackOff: '#3D4555',
-  notificationSwitchThumbOn: '#3ABDA4',
-  notificationSwitchThumbOff: '#C8D0DA',
+  /** Prayer notification sheet switch (Figma node 415-15904) */
+  notificationSwitchTrackOn: '#F9C971',
+  notificationSwitchTrackOff: '#123859',
+  notificationSwitchThumbOn: '#021226',
+  notificationSwitchThumbOff: '#8E8F9D',
 };
 
 export const Fonts = {

@@ -8,7 +8,6 @@ import {
   StatusBar,
   ScrollView,
   TouchableOpacity,
-  Switch,
   Platform,
   Pressable,
 } from 'react-native';
@@ -24,6 +23,7 @@ import { fetchAdhanRelatedAudioFromApi } from '../services/adhanApi';
 import NotificationBellRowIcon from '../components/NotificationBellRowIcon';
 import AzaanRowIcon from '../components/AzaanRowIcon';
 import SilentModeRowIcon from '../components/SilentModeRowIcon';
+import PrayerNotificationSwitch from '../components/PrayerNotificationSwitch';
 
 function mainRowSubtitle(soundMode) {
   if (soundMode === 'silent') return 'Notification without sound';
@@ -131,12 +131,7 @@ export default function NotificationSettingsScreen({ navigation, route }) {
                 <Text style={styles.rowSub}>{mainRowSubtitle(soundMode)}</Text>
               </View>
             </View>
-            <Switch
-              value={notificationEnabled}
-              onValueChange={onMainToggle}
-              trackColor={{ false: '#333', true: Colors.gold }}
-              thumbColor={Colors.textWhite}
-            />
+            <PrayerNotificationSwitch value={notificationEnabled} onValueChange={onMainToggle} />
           </View>
         </View>
 
