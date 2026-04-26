@@ -331,7 +331,7 @@ export default function QuranScreen({ navigation }) {
                   >
                     <View style={[styles.numberBadge, isCompact && styles.numberBadgeCompact]}>
                       <Ionicons name="albums-outline" size={20} color={Colors.textMuted} />
-                      <Text style={styles.surahNumber}>{row.juzNum}</Text>
+                      {/* <Text style={styles.surahNumber}>{row.juzNum}</Text> */}
                     </View>
                     <View style={styles.surahInfo}>
                       <Text style={[styles.surahName, isCompact && styles.surahNameCompact]} numberOfLines={1}>

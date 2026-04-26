@@ -11,7 +11,7 @@ import {
   Platform,
   Pressable,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Svg, { Path } from 'react-native-svg';
 import { Colors, Fonts, Radius } from '../constants/theme';
 import {
   loadPrayerNotificationSettings,
@@ -29,6 +29,10 @@ function mainRowSubtitle(soundMode) {
   if (soundMode === 'silent') return 'Notification without sound';
   return 'Play Adhan with sound';
 }
+
+const BACK_ARROW_LEFT_PATH = 'M11.9983 18.9974L4.99927 11.9984L11.9983 4.99931';
+const BACK_ARROW_LINE_PATH = 'M18.9974 11.9984H4.99927';
+const BACK_ARROW_STROKE = 1.99973;
 
 function RadioDot({ selected }) {
   return (
@@ -97,7 +101,7 @@ export default function NotificationSettingsScreen({ navigation, route }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundDark} />
 
-      <View style={styles.dragHandle} />
+      {/* <View style={styles.dragHandle} /> */}
 
       <SafeAreaView>
         <View style={styles.header}>
@@ -108,7 +112,22 @@ export default function NotificationSettingsScreen({ navigation, route }) {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <MaterialCommunityIcons name="chevron-left" size={30} color={Colors.textWhite} />
+            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" accessibilityRole="image">
+              <Path
+                d={BACK_ARROW_LEFT_PATH}
+                stroke={Colors.textWhite}
+                strokeWidth={BACK_ARROW_STROKE}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <Path
+                d={BACK_ARROW_LINE_PATH}
+                stroke={Colors.textWhite}
+                strokeWidth={BACK_ARROW_STROKE}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
           </Pressable>
           <View style={styles.headerTitleWrap} pointerEvents="none">
             <Text style={styles.title} numberOfLines={1}>
