@@ -288,7 +288,6 @@ export default function QuranReaderScreen({ navigation, route }) {
           ) : null}
           {!textLoading && textError && ayahs.length === 0 ? (
             <View style={styles.textStateWrap}>
-              <Ionicons name="alert-circle-outline" size={40} color={Colors.textMuted} />
               <Text style={styles.textStateHint}>{textError}</Text>
             </View>
           ) : null}
@@ -308,11 +307,6 @@ export default function QuranReaderScreen({ navigation, route }) {
                     onPress={() => playAyahAt(index)}
                     disabled={!canPlayAudio}
                   >
-                    <Ionicons
-                      name="volume-medium-outline"
-                      size={22}
-                      color={!canPlayAudio ? Colors.dotInactiveDark : Colors.textGrey}
-                    />
                   </TouchableOpacity>
                 </View>
                 <Text style={styles.arabicText}>{ayah.arabic}</Text>
