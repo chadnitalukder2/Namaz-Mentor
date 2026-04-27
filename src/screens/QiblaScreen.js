@@ -3,12 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator,
   useWindowDimensions,
-  Platform,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, {
@@ -230,15 +229,15 @@ export default function QiblaScreen({ navigation }) {
     headingAvailable,
     turnHint,
   } = useQibla();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isCompact = width < 380;
   const isSmall = width < 340;
+  const isShortScreen = height < 700;
   const compassScale = isSmall ? 0.76 : isCompact ? 0.88 : 1;
   const formattedDistance = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 0,
   }).format(Math.round(distanceKm));
-  const androidTopInset =
-    Platform.OS === 'android' ? Math.max(StatusBar.currentHeight || 0, 24) : 0;
 
   const turnSecondLine = () => {
     if (!headingAvailable) return null;
@@ -258,11 +257,11 @@ export default function QiblaScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { minHeight: height }]}>
       <StatusBar barStyle="light-content" backgroundColor={FIGMA.bg} />
 
-      <SafeAreaView style={[styles.safe, androidTopInset > 0 && { paddingTop: androidTopInset }]}>
-        <View style={[styles.headerRow, isCompact && styles.headerRowCompact]}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={styles.safe}>
+        <View style={[styles.headerRow, isCompact && styles.headerRowCompact, isShortScreen && styles.headerRowShort]}>
           <View style={styles.headerLeft}>
             <Text style={styles.locationGold} numberOfLines={2}>
               {!ready ? 'Locating…' : locationLabel}
@@ -283,7 +282,7 @@ export default function QiblaScreen({ navigation }) {
           </View>
         </View>
 
-        <View style={styles.compassBlock}>
+        <View style={[styles.compassBlock, isShortScreen && styles.compassBlockShort]}>
           <CompassGlow />
           <QiblaCompass bearingDeg={bearingDeg} headingDeg={headingDeg} scale={compassScale} />
         </View>
@@ -298,13 +297,19 @@ export default function QiblaScreen({ navigation }) {
           </View>
         </View>
 
-        <Text style={styles.northHint}>Point your device north for accurate reading</Text>
-
-        <View style={styles.tabSpacer} />
-        <View style={styles.tabBarWrapper}>
-          <MainTabBar activeTab="qibla" navigation={navigation} />
-        </View>
+        <Text style={[styles.northHint, isShortScreen && styles.northHintShort]}>
+          Point your device north for accurate reading
+        </Text>
       </SafeAreaView>
+
+      <View
+        style={[
+          styles.tabBarWrapper,
+          { paddingBottom: Math.max(insets.bottom, Spacing.md) },
+        ]}
+      >
+        <MainTabBar activeTab="qibla" navigation={navigation} />
+      </View>
     </View>
   );
 }
@@ -316,6 +321,7 @@ const styles = StyleSheet.create({
   },
   safe: {
     flex: 1,
+    minHeight: 0,
     backgroundColor: FIGMA.bg,
     paddingHorizontal: Spacing.lg,
   },
@@ -323,7 +329,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    paddingTop: 20,
+    paddingTop: 12,
     paddingBottom: 10,
     paddingLeft: 20,
     paddingRight: 20,
@@ -331,6 +337,10 @@ const styles = StyleSheet.create({
   },
   headerRowCompact: {
     paddingHorizontal: 0,
+  },
+  headerRowShort: {
+    paddingTop: 6,
+    paddingBottom: 6,
   },
   headerLeft: {
     flex: 1,
@@ -390,10 +400,13 @@ const styles = StyleSheet.create({
   },
   compassBlock: {
     flex: 1,
-    minHeight: 280,
+    minHeight: 0,
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: Spacing.md,
+  },
+  compassBlockShort: {
+    marginVertical: Spacing.xs,
   },
   distanceBlock: {
     flexDirection: 'row',
@@ -436,12 +449,11 @@ const styles = StyleSheet.create({
     marginTop: Spacing.lg,
     paddingHorizontal: Spacing.md,
   },
-  tabSpacer: {
-    flexGrow: 0,
-    minHeight: Spacing.sm,
+  northHintShort: {
+    marginTop: Spacing.sm,
   },
   tabBarWrapper: {
-    paddingBottom: Spacing.md,
+    backgroundColor: FIGMA.bg,
     paddingTop: Spacing.sm,
   },
 });

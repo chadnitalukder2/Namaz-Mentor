@@ -3,10 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
+  ScrollView,
   useWindowDimensions,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing } from '../constants/theme';
 import { PrimaryButton, GhostButton, DotIndicator } from '../components/UIComponents';
 import WelcomeIllustration from '../components/WelcomeIllustration';
@@ -14,31 +15,52 @@ import WelcomeIllustration from '../components/WelcomeIllustration';
 const H_PADDING = 20;
 const ILLUSTRATION_ASPECT = 64 / 350;
 
+/** ~primary + ghost + dots + gaps; keeps illustration from crowding CTAs on short phones */
+const BOTTOM_ACTIONS_RESERVE = 232;
+
 export default function WelcomeScreen({ navigation }) {
-  const { width: windowWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const contentWidth = windowWidth - H_PADDING * 2;
-  const illustrationHeight = contentWidth * ILLUSTRATION_ASPECT;
+  const midBudget = Math.max(
+    120,
+    windowHeight - insets.top - insets.bottom - BOTTOM_ACTIONS_RESERVE,
+  );
+  const illustrationHeight = Math.min(
+    contentWidth * ILLUSTRATION_ASPECT,
+    Math.max(48, midBudget * 0.45),
+  );
+  const sectionGap = windowHeight < 700 ? 20 : 32;
+  const bottomPad = Math.max(Spacing.xl, insets.bottom + Spacing.sm);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundDark} />
 
-      <View style={styles.centerContent}>
-        <View style={styles.illustrationWrap}>
-          <WelcomeIllustration width={contentWidth} height={illustrationHeight} />
-        </View>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+      >
+        <View style={[styles.centerContent, { gap: sectionGap }]}>
+          <View style={styles.illustrationWrap}>
+            <WelcomeIllustration width={contentWidth} height={illustrationHeight} />
+          </View>
 
-        <View style={styles.copyBlock}>
-          <Text style={styles.heading}>
-            Your Daily Islamic{'\n'}Companion
-          </Text>
-          <Text style={styles.subtitle}>
-            Accurate prayer times, Quran, Qibla and Dhikr — all in one calm space.
-          </Text>
+          <View style={styles.copyBlock}>
+            <Text style={styles.heading}>
+              Your Daily Islamic{'\n'}Companion
+            </Text>
+            <Text style={styles.subtitle}>
+              Accurate prayer times, Quran, Qibla and Dhikr — all in one calm space.
+            </Text>
+          </View>
         </View>
-      </View>
+      </ScrollView>
 
-      <View style={styles.bottomSection}>
+      <View style={[styles.bottomSection, { paddingBottom: bottomPad }]}>
         <PrimaryButton
           title="Get Started"
           onPress={() => navigation?.navigate('LocationPermission')}
@@ -62,11 +84,18 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundDark,
     paddingHorizontal: H_PADDING,
   },
-  centerContent: {
+  scroll: {
     flex: 1,
+    minHeight: 0,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingVertical: Spacing.md,
+  },
+  centerContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 32,
   },
   illustrationWrap: {
     width: '100%',

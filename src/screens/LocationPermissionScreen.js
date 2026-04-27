@@ -3,9 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
+  ScrollView,
+  useWindowDimensions,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Fonts, Spacing } from '../constants/theme';
 import { PrimaryButton, GhostButton, DotIndicator } from '../components/UIComponents';
 import LocationPinIllustration from '../components/LocationPinIllustration';
@@ -13,22 +15,36 @@ import LocationPinIllustration from '../components/LocationPinIllustration';
 const H_PADDING = 20;
 
 export default function LocationPermissionScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const sectionGap = windowHeight < 700 ? 16 : 24;
+  const pinSize = windowHeight < 700 ? 36 : 44;
+  const bottomPad = Math.max(Spacing.xl, insets.bottom + Spacing.sm);
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundDark} />
 
-      <View style={styles.centerContent}>
-        <LocationPinIllustration />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}
+      >
+        <View style={[styles.centerContent, { gap: sectionGap }]}>
+          <LocationPinIllustration size={pinSize} />
 
-        <View style={styles.copyBlock}>
-          <Text style={styles.heading}>Enable Location</Text>
-          <Text style={styles.subtitle}>
-            We use your location to calculate accurate prayer times based on your area.
-          </Text>
+          <View style={styles.copyBlock}>
+            <Text style={styles.heading}>Enable Location</Text>
+            <Text style={styles.subtitle}>
+              We use your location to calculate accurate prayer times based on your area.
+            </Text>
+          </View>
         </View>
-      </View>
+      </ScrollView>
 
-      <View style={styles.bottomSection}>
+      <View style={[styles.bottomSection, { paddingBottom: bottomPad }]}>
         <PrimaryButton
           title="Allow Location"
           onPress={() => navigation?.navigate('NotificationPermission')}
@@ -51,11 +67,18 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundDark,
     paddingHorizontal: H_PADDING,
   },
-  centerContent: {
+  scroll: {
     flex: 1,
+    minHeight: 0,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingVertical: Spacing.md,
+  },
+  centerContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 24,
   },
   copyBlock: {
     width: '100%',

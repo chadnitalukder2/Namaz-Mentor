@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/theme';
 import SplashMark from '../components/SplashMark';
 
@@ -14,12 +15,12 @@ export default function SplashScreen({ navigation }) {
   }, [navigation]);
 
   return (
-    <View style={styles.root}>
+    <SafeAreaView style={styles.root} edges={['top', 'right', 'left', 'bottom']}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundDark} />
       <View style={styles.center}>
         <SplashMark width={79} height={106} />
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
