@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   ScrollView,
   TouchableOpacity,
@@ -11,8 +10,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   useWindowDimensions,
-  Platform,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
@@ -33,9 +32,9 @@ export default function QuranScreen({ navigation }) {
   const [error, setError] = useState(null);
   const [progress, setProgress] = useState(null);
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isCompact = width < 380;
   const isSmall = width < 340;
-  const androidTopInset = Platform.OS === 'android' ? Math.max(StatusBar.currentHeight || 0, 0) : 0;
 
   const loadSurahs = useCallback(async () => {
     setError(null);
@@ -132,9 +131,7 @@ export default function QuranScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundDark} />
 
-      <SafeAreaView style={[styles.safeArea, {   paddingHorizontal: 20,
-      paddingTop: 20,
-      paddingBottom: 0, }]}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         {/* {continueMeta ? (
           <TouchableOpacity
             activeOpacity={0.85}
@@ -259,18 +256,20 @@ export default function QuranScreen({ navigation }) {
 
         {/* Lists */}
         {!loading || surahs.length > 0 ? (
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={[styles.surahList, isCompact && styles.surahListCompact]}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                tintColor={Colors.gold}
-                colors={[Colors.gold]}
-              />
-            }
-          >
+          <View style={styles.listArea}>
+            <ScrollView
+              style={styles.listScroll}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={[styles.surahList, isCompact && styles.surahListCompact]}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor={Colors.gold}
+                  colors={[Colors.gold]}
+                />
+              }
+            >
             {activeTab === 'surah'
               ? filteredSurahs.map((surah) => (
                   <TouchableOpacity
@@ -344,11 +343,12 @@ export default function QuranScreen({ navigation }) {
                     <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
                   </TouchableOpacity>
                 ))}
-          </ScrollView>
+            </ScrollView>
+          </View>
         ) : null}
       </SafeAreaView>
 
-      <View style={styles.tabBarWrapper}>
+      <View style={[styles.tabBarWrapper, { paddingBottom: Math.max(insets.bottom, Spacing.sm) }]}>
         <MainTabBar activeTab="quran" navigation={navigation} />
       </View>
     </View>
@@ -362,8 +362,17 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.sm,
+    minHeight: 0,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 0,
+  },
+  listArea: {
+    flex: 1,
+    minHeight: 0,
+  },
+  listScroll: {
+    flex: 1,
   },
 
   continueCard: {
