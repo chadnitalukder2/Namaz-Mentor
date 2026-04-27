@@ -4,13 +4,13 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   ScrollView,
   TouchableOpacity,
   Platform,
   Pressable,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { Colors, Fonts, Radius } from '../constants/theme';
 import {
@@ -43,6 +43,7 @@ function RadioDot({ selected }) {
 }
 
 export default function NotificationSettingsScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const prayerId = route?.params?.prayerId || 'fajr';
   const prayerName = route?.params?.prayer || 'Fajr';
 
@@ -98,99 +99,116 @@ export default function NotificationSettingsScreen({ navigation, route }) {
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: insets.top,
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
+        },
+      ]}
+    >
       <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundDark} />
 
       {/* <View style={styles.dragHandle} /> */}
 
-      <SafeAreaView>
-        <View style={styles.header}>
-          <Pressable
-            onPress={goBack}
-            style={({ pressed }) => [styles.headerSide, pressed && styles.headerSidePressed]}
-            hitSlop={16}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" accessibilityRole="image">
-              <Path
-                d={BACK_ARROW_LEFT_PATH}
-                stroke={Colors.textWhite}
-                strokeWidth={BACK_ARROW_STROKE}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <Path
-                d={BACK_ARROW_LINE_PATH}
-                stroke={Colors.textWhite}
-                strokeWidth={BACK_ARROW_STROKE}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </Pressable>
-          <View style={styles.headerTitleWrap} pointerEvents="none">
-            <Text style={styles.title} numberOfLines={1}>
-              Notification for {prayerName}
-            </Text>
-          </View>
-          <View style={styles.headerSide} />
+      <View style={styles.header}>
+        <Pressable
+          onPress={goBack}
+          style={({ pressed }) => [styles.headerSide, pressed && styles.headerSidePressed]}
+          hitSlop={16}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" accessibilityRole="image">
+            <Path
+              d={BACK_ARROW_LEFT_PATH}
+              stroke={Colors.textWhite}
+              strokeWidth={BACK_ARROW_STROKE}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <Path
+              d={BACK_ARROW_LINE_PATH}
+              stroke={Colors.textWhite}
+              strokeWidth={BACK_ARROW_STROKE}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+        </Pressable>
+        <View style={styles.headerTitleWrap} pointerEvents="none">
+          <Text style={styles.title} numberOfLines={1}>
+            Notification for {prayerName}
+          </Text>
         </View>
-      </SafeAreaView>
+        <View style={styles.headerSide} />
+      </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.card}>
-          <View style={styles.toggleRow}>
-            <View style={styles.toggleLeft}>
-              <View style={styles.iconBg}>
-                <NotificationBellRowIcon size={22} />
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(24, insets.bottom + 16) },
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.scrollMain}>
+          <View style={styles.card}>
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleLeft}>
+                <View style={styles.iconBg}>
+                  <NotificationBellRowIcon size={22} />
+                </View>
+                <View style={styles.toggleTextWrap}>
+                  <Text style={styles.rowLabel}>Notification</Text>
+                  <Text style={styles.rowSub}>{mainRowSubtitle(soundMode)}</Text>
+                </View>
               </View>
-              <View style={styles.toggleTextWrap}>
-                <Text style={styles.rowLabel}>Notification</Text>
-                <Text style={styles.rowSub}>{mainRowSubtitle(soundMode)}</Text>
-              </View>
+              <PrayerNotificationSwitch value={notificationEnabled} onValueChange={onMainToggle} />
             </View>
-            <PrayerNotificationSwitch value={notificationEnabled} onValueChange={onMainToggle} />
           </View>
-        </View>
 
-        <Text style={styles.sectionTitle}>Sound mode</Text>
-        <View style={styles.radioRowContainer}>
-          <TouchableOpacity
-            style={[styles.radioRow, !notificationEnabled && styles.radioRowDisabled]}
-            onPress={selectAzaan}
-            activeOpacity={0.75}
-            disabled={!notificationEnabled}
-          >
-            <View style={styles.toggleLeft}>
-              <View style={styles.iconBg}>
-                <AzaanRowIcon size={22} />
+          <Text style={styles.sectionTitle}>Sound mode</Text>
+          <View style={styles.radioRowContainer}>
+            <TouchableOpacity
+              style={[styles.radioRow, !notificationEnabled && styles.radioRowDisabled]}
+              onPress={selectAzaan}
+              activeOpacity={0.75}
+              disabled={!notificationEnabled}
+            >
+              <View style={styles.toggleLeft}>
+                <View style={styles.iconBg}>
+                  <AzaanRowIcon size={22} />
+                </View>
+                <View style={styles.toggleTextWrap}>
+                  <Text style={styles.rowLabel}>Azaan</Text>
+                  <Text style={styles.rowSub}>Play call to prayer</Text>
+                </View>
               </View>
-              <View style={styles.toggleTextWrap}>
-                <Text style={styles.rowLabel}>Azaan</Text>
-                <Text style={styles.rowSub}>Play call to prayer</Text>
-              </View>
-            </View>
-            <RadioDot selected={soundMode === 'azaan'} />
-          </TouchableOpacity>
+              <RadioDot selected={soundMode === 'azaan'} />
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.radioRow, !notificationEnabled && styles.radioRowDisabled]}
-            onPress={selectSilent}
-            activeOpacity={0.75}
-            disabled={!notificationEnabled}
-          >
-            <View style={styles.toggleLeft}>
-              <View style={styles.iconBg}>
-                <SilentModeRowIcon size={22} />
+            <TouchableOpacity
+              style={[styles.radioRow, !notificationEnabled && styles.radioRowDisabled]}
+              onPress={selectSilent}
+              activeOpacity={0.75}
+              disabled={!notificationEnabled}
+            >
+              <View style={styles.toggleLeft}>
+                <View style={styles.iconBg}>
+                  <SilentModeRowIcon size={22} />
+                </View>
+                <View style={styles.toggleTextWrap}>
+                  <Text style={styles.rowLabel}>Silent Mode</Text>
+                  <Text style={styles.rowSub}>Notification without sound</Text>
+                </View>
               </View>
-              <View style={styles.toggleTextWrap}>
-                <Text style={styles.rowLabel}>Silent Mode</Text>
-                <Text style={styles.rowSub}>Notification without sound</Text>
-              </View>
-            </View>
-            <RadioDot selected={soundMode === 'silent'} />
-          </TouchableOpacity>
+              <RadioDot selected={soundMode === 'silent'} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.noteCard}>
@@ -211,6 +229,10 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
+  scroll: {
+    flex: 1,
+    minHeight: 0,
+  },
   dragHandle: {
     width: 40,
     height: 4,
@@ -226,6 +248,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 10,
     borderBottomWidth: 1,
+    paddingTop: 20,
+    paddingBottom: 20,
     borderBottomColor: 'rgba(255,255,255,0.07)',
   },
   headerSide: {
@@ -252,9 +276,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   scrollContent: {
-    padding: 20,
+    flexGrow: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  scrollMain: {
     gap: 16,
-    paddingBottom: 40,
   },
 
   card: {
@@ -357,7 +385,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(166, 150, 119, 0.13)',
     padding: 16,
-    marginTop: 20,
   },
   noteText: {
     ...Fonts.regular,

@@ -54,7 +54,11 @@ export default function AppNavigator() {
           <Stack.Screen
             name="NotificationSettings"
             component={NotificationSettingsScreen}
-            options={{ presentation: 'modal' }}
+            options={{
+              // 'modal' on iOS is often a short page sheet; fullScreenModal fills the phone viewport.
+              presentation: 'fullScreenModal',
+              animation: 'slide_from_bottom',
+            }}
           />
         </Stack.Navigator>
         </NavigationContainer>
