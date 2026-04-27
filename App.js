@@ -1,3 +1,4 @@
+import { View } from 'react-native';
 import { configurePrayerNotificationHandler } from './src/services/prayerNotifications';
 import {
   Inter_400Regular,
@@ -22,5 +23,9 @@ export default function App() {
     return null;
   }
 
-  return <AppNavigator />;
+  return (
+    <View style={{ flex: 1 }}>
+      <AppNavigator />
+    </View>
+  );
 }

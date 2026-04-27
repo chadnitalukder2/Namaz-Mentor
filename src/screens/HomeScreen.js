@@ -4,7 +4,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   ScrollView,
   TouchableOpacity,
@@ -12,6 +11,7 @@ import {
   useWindowDimensions,
   Platform,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
 import LocationPinIllustration from '../components/LocationPinIllustration';
@@ -31,8 +31,6 @@ import {
   isPrayerAdhanSoundOn,
 } from '../services/prayerNotifications';
 
-const TOP_SECTION_PADDING = 14;
-
 const PRAYER_SVG_ICONS = {
   fajr: FajrPrayerIcon,
   dhuhr: DhuhrPrayerIcon,
@@ -43,11 +41,12 @@ const PRAYER_SVG_ICONS = {
 
 export default function HomeScreen({ navigation }) {
   const { prayers, nextPrayer, nextPrayerAt, locationLabel, loading } = usePrayerTimes();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isCompact = width < 360;
+  /** Short phones (e.g. SE): keep hero from eating the scrollable sheet. */
+  const isShortScreen = height < 700;
   const locationMaxWidth = Math.max(80, width - 200);
-  const androidTopInset =
-    Platform.OS === 'android' ? Math.max(StatusBar.currentHeight || 0, 24) : 0;
   const [selectedPrayerId, setSelectedPrayerId] = useState(null);
   const [notifySettings, setNotifySettings] = useState(null);
 
@@ -137,13 +136,10 @@ export default function HomeScreen({ navigation }) {
       />
 
       <SafeAreaView
-        style={[
-          styles.safeTop,
-          isCompact && styles.safeTopCompact,
-          androidTopInset > 0 && { paddingTop: androidTopInset },
-        ]}
+        edges={['top', 'left', 'right']}
+        style={[styles.safeTop, isCompact && styles.safeTopCompact]}
       >
-        <View style={styles.header}>
+        <View style={[styles.header, isShortScreen && styles.headerShort]}>
           <View style={styles.locationPill}>
             <LocationPinIllustration size={16} centerFill={Colors.backgroundBlue} />
             <Text
@@ -173,7 +169,7 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.heroRow}>
+        <View style={[styles.heroRow, isShortScreen && styles.heroRowShort]}>
           <View style={styles.heroTextBlock}>
             <Text style={[styles.nextPrayerName, isCompact && styles.nextPrayerNameCompact]}>
               {selectedPrayer?.name || '--'}
@@ -206,7 +202,7 @@ export default function HomeScreen({ navigation }) {
 
           <View style={styles.heroRightColumn}>
             <View style={styles.heroIconWrap}>
-              <HomeHeroMosqueIcon size={isCompact ? 102 : 114} />
+              <HomeHeroMosqueIcon size={isShortScreen ? 96 : isCompact ? 102 : 114} />
             </View>
           </View>
         </View>
@@ -235,7 +231,7 @@ export default function HomeScreen({ navigation }) {
             />
           ))}
         </ScrollView>
-        <View style={styles.tabBarWrapper}>
+        <View style={[styles.tabBarWrapper, { paddingBottom: Math.max(insets.bottom, 12) }]}>
           <MainTabBar activeTab="home" navigation={navigation} />
         </View>
       </View>
@@ -265,6 +261,10 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     // paddingHorizontal: 20,
     paddingBottom: 10,
+  },
+  headerShort: {
+    paddingTop: 10,
+    paddingBottom: 6,
   },
   locationPill: {
     flex: 1,
@@ -305,10 +305,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 20,
-    height: 250,
-    // padding: 20,
-    paddingTop: '20',
+    minHeight: 250,
+    paddingTop: 12,
+    paddingBottom: 8,
     backgroundColor: 'rgba(2, 18, 38, 1)',
+  },
+  heroRowShort: {
+    minHeight: 148,
+    paddingTop: 6,
+    paddingBottom: 6,
+    gap: 12,
   },
   heroTextBlock: {
     flex: 1,
@@ -318,7 +324,7 @@ const styles = StyleSheet.create({
     ...Fonts.bold,
     fontSize: 38,
     lineHeight: 38,
-    marginBottom: '10',
+    marginBottom: 10,
     color: Colors.gold,
   },
   nextPrayerNameCompact: {
@@ -342,7 +348,7 @@ const styles = StyleSheet.create({
     color: '#8CA2BA',
     fontSize: 14,
     marginTop: 2,
-    marginBottom: '10',
+    marginBottom: 10,
   },
   heroControls: {
     flexDirection: 'row',
@@ -410,14 +416,13 @@ const styles = StyleSheet.create({
   prayerList: {
     paddingHorizontal: 14,
     gap: 12,
+    justifyContent: 'center',
     paddingBottom: Spacing.sm,
   },
   prayerListContent: {
     flexGrow: 1,
-    justifyContent: 'center',
   },
   tabBarWrapper: {
-    paddingBottom: 12,
     paddingTop: 8,
   },
 });
