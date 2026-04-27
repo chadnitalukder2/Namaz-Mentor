@@ -625,6 +625,5 @@ const styles = StyleSheet.create({
   tabBarWrapper: {
     backgroundColor: Colors.backgroundDark,
     paddingTop: Spacing.sm,
-    paddingBottom: Spacing.lg,
   },
 });

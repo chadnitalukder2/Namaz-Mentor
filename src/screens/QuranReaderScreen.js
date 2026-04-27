@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
@@ -74,6 +74,7 @@ function BackArrowIcon({ size = 24, color = '#F5F7FA' }) {
 }
 
 export default function QuranReaderScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const surah = route?.params?.surah || { id: 1, name: 'Al-Fatihah', translation: 'The Opening' };
   const initialAyah = route?.params?.initialAyah;
 
@@ -345,7 +346,7 @@ export default function QuranReaderScreen({ navigation, route }) {
           })}
         </ScrollView>
 
-        <View style={styles.bottomBar}>
+        <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}>
           <View style={styles.bottomMeta}>
             <Text style={styles.bottomMetaLabel}>Ayah</Text>
             <Text style={styles.bottomMetaValue}>
@@ -412,6 +413,7 @@ export default function QuranReaderScreen({ navigation, route }) {
             </TouchableOpacity>
           </View>
         </View>
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -424,6 +426,15 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    minHeight: 0,
+  },
+  scrollArea: {
+    flex: 1,
+    minHeight: 0,
+  },
+  scrollView: {
+    flex: 1,
+    minHeight: 0,
   },
   header: {
     flexDirection: 'row',
@@ -547,7 +558,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.separator,
     paddingTop: Spacing.sm,
-    paddingBottom: Spacing.md,
     paddingHorizontal: Spacing.md,
     backgroundColor: Colors.backgroundDark,
   },
