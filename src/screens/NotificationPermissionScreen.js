@@ -55,13 +55,13 @@ export default function NotificationPermissionScreen({ navigation }) {
             if (Platform.OS !== 'web') {
               await requestNotificationPermissions();
             }
-            navigation?.navigate('Home');
+            navigation?.replace('MainTabs', { screen: 'Home' });
           }}
         />
 
         <GhostButton
           title="Skip for Now"
-          onPress={() => navigation?.navigate('Home')}
+          onPress={() => navigation?.replace('MainTabs', { screen: 'Home' })}
         />
 
         <DotIndicator total={3} active={2} />

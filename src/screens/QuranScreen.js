@@ -11,7 +11,7 @@ import {
   RefreshControl,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
@@ -19,7 +19,6 @@ import { SURAHS as FALLBACK_SURAHS } from '../constants/data';
 import { JUZ_FIRST_SURAH_NUMBER } from '../constants/quranJuz';
 import { fetchAllSurahs, fetchJuzReferences } from '../services/quranApi';
 import { getQuranProgress } from '../utils/quranProgress';
-import MainTabBar from '../components/MainTabBar';
 import { TabQuranIcon } from '../components/MainTabIcons';
 
 export default function QuranScreen({ navigation }) {
@@ -32,7 +31,6 @@ export default function QuranScreen({ navigation }) {
   const [error, setError] = useState(null);
   const [progress, setProgress] = useState(null);
   const { width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
   const isCompact = width < 380;
   const isSmall = width < 340;
 
@@ -348,9 +346,6 @@ export default function QuranScreen({ navigation }) {
         ) : null}
       </SafeAreaView>
 
-      <View style={[styles.tabBarWrapper, { paddingBottom: Math.max(insets.bottom, Spacing.sm) }]}>
-        <MainTabBar activeTab="quran" navigation={navigation} />
-      </View>
     </View>
   );
 }
@@ -620,10 +615,5 @@ const styles = StyleSheet.create({
   ayahCountCompact: {
     fontSize: 12,
     minWidth: 64,
-  },
-
-  tabBarWrapper: {
-    backgroundColor: Colors.backgroundDark,
-    paddingTop: Spacing.sm,
   },
 });

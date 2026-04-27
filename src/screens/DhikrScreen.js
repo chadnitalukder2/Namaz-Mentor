@@ -12,8 +12,6 @@ import {
 } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
 import { DHIKR_CATEGORIES } from '../constants/data';
-import MainTabBar from '../components/MainTabBar';
-
 // ─── Circular Counter ─────────────────────────────────────────────
 const TasbihCounter = ({ count, target, onPress, onReset, onSetTarget, isCompact, isSmall }) => {
   const progress = Math.min(count / target, 1);
@@ -233,11 +231,6 @@ export default function DhikrScreen({ navigation }) {
           </View>
         </ScrollView>
       </SafeAreaView>
-
-      {/* Tab Bar */}
-      <View style={styles.tabBarWrapper}>
-        <MainTabBar activeTab="dhikr" navigation={navigation} />
-      </View>
     </View>
   );
 }
@@ -334,10 +327,5 @@ const styles = StyleSheet.create({
   chevron: {
     fontSize: 24,
     color: Colors.textMuted,
-  },
-  tabBarWrapper: {
-    backgroundColor: Colors.backgroundDark,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.lg,
   },
 });

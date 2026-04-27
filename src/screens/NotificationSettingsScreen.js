@@ -73,7 +73,7 @@ export default function NotificationSettingsScreen({ navigation, route }) {
     if (navigation?.canGoBack?.()) {
       navigation.goBack();
     } else {
-      navigation?.navigate('Home');
+      navigation?.navigate('MainTabs', { screen: 'Home' });
     }
   };
 

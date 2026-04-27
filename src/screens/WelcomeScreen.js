@@ -68,7 +68,7 @@ export default function WelcomeScreen({ navigation }) {
 
         <GhostButton
           title="Already set up?"
-          onPress={() => navigation?.navigate('Home')}
+          onPress={() => navigation?.replace('MainTabs', { screen: 'Home' })}
           style={styles.ghostBtn}
         />
 

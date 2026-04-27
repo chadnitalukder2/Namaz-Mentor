@@ -11,11 +11,10 @@ import {
   useWindowDimensions,
   Platform,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
 import LocationPinIllustration from '../components/LocationPinIllustration';
-import MainTabBar from '../components/MainTabBar';
 import HomeHeroMosqueIcon from '../components/HomeHeroMosqueIcon';
 import { usePrayerTimes, useCountdownToDate } from '../hooks/usePrayerData';
 import FajrPrayerIcon from '../components/FajrPrayerIcon';
@@ -42,7 +41,6 @@ const PRAYER_SVG_ICONS = {
 export default function HomeScreen({ navigation }) {
   const { prayers, nextPrayer, nextPrayerAt, locationLabel, loading } = usePrayerTimes();
   const { width, height } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
   const isCompact = width < 360;
   /** Short phones (e.g. SE): keep hero from eating the scrollable sheet. */
   const isShortScreen = height < 700;
@@ -231,9 +229,6 @@ export default function HomeScreen({ navigation }) {
             />
           ))}
         </ScrollView>
-        <View style={[styles.tabBarWrapper, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-          <MainTabBar activeTab="home" navigation={navigation} />
-        </View>
       </View>
     </View>
   );
@@ -421,9 +416,6 @@ const styles = StyleSheet.create({
   },
   prayerListContent: {
     flexGrow: 1,
-  },
-  tabBarWrapper: {
-    paddingTop: 8,
   },
 });
 

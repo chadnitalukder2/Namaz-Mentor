@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, {
@@ -19,7 +19,6 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 import { Colors, Fonts, Spacing } from '../constants/theme';
-import MainTabBar from '../components/MainTabBar';
 import { useQibla } from '../hooks/usePrayerData';
 
 /** Qibla — Figma https://www.figma.com/design/AFv20FFZyV3tJXlJBDMWLq/Namaz-Mentor-app--2?node-id=430-10944 (aligned to sibling 430-10881 where nodes match). */
@@ -219,7 +218,7 @@ const compassStyles = StyleSheet.create({
   },
 });
 
-export default function QiblaScreen({ navigation }) {
+export default function QiblaScreen() {
   const {
     ready,
     locationLabel,
@@ -230,7 +229,6 @@ export default function QiblaScreen({ navigation }) {
     turnHint,
   } = useQibla();
   const { width, height } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
   const isCompact = width < 380;
   const isSmall = width < 340;
   const isShortScreen = height < 700;
@@ -301,15 +299,6 @@ export default function QiblaScreen({ navigation }) {
           Point your device north for accurate reading
         </Text>
       </SafeAreaView>
-
-      <View
-        style={[
-          styles.tabBarWrapper,
-          { paddingBottom: Math.max(insets.bottom, Spacing.md) },
-        ]}
-      >
-        <MainTabBar activeTab="qibla" navigation={navigation} />
-      </View>
     </View>
   );
 }
@@ -451,9 +440,5 @@ const styles = StyleSheet.create({
   },
   northHintShort: {
     marginTop: Spacing.sm,
-  },
-  tabBarWrapper: {
-    backgroundColor: FIGMA.bg,
-    paddingTop: Spacing.sm,
   },
 });
