@@ -47,14 +47,44 @@ export function angleDeltaDeg(from, to) {
   return ((to - from + 540) % 360) - 180;
 }
 
+/** 16-point compass rose label for a clockwise bearing from north (0–360°). */
+const ROSE_16 = [
+  'N',
+  'NNE',
+  'NE',
+  'ENE',
+  'E',
+  'ESE',
+  'SE',
+  'SSE',
+  'S',
+  'SSW',
+  'SW',
+  'WSW',
+  'W',
+  'WNW',
+  'NW',
+  'NNW',
+];
+
+export function bearingToCompassRose16(deg) {
+  if (deg == null || Number.isNaN(deg)) return '—';
+  const d = ((deg % 360) + 360) % 360;
+  const i = Math.round(d / 22.5) % 16;
+  return ROSE_16[i];
+}
+
 /**
  * User-facing turn hint from device heading (top of phone vs true north) and Qibla bearing.
+ */
+/**
+ * @returns {{ turnSide: 'left' | 'right' | 'aligned' | null, ionicon: string }}
+ * turnSide: clockwise from current heading → 'right'; counter-clockwise → 'left'.
  */
 export function turnHintFromHeading(bearingDeg, headingDeg) {
   if (headingDeg == null || Number.isNaN(headingDeg)) {
     return {
-      line1: 'Point top of phone north',
-      line2: 'Gold needle shows Qibla bearing',
+      turnSide: null,
       ionicon: 'compass-outline',
     };
   }
@@ -62,21 +92,18 @@ export function turnHintFromHeading(bearingDeg, headingDeg) {
   const ad = Math.abs(delta);
   if (ad < 6) {
     return {
-      line1: 'You are facing the Qibla',
-      line2: 'Hold steady for prayer',
+      turnSide: 'aligned',
       ionicon: 'checkmark-circle',
     };
   }
   if (delta > 0) {
     return {
-      line1: 'Turn clockwise',
-      line2: `About ${Math.round(ad)}° to face the Qibla`,
+      turnSide: 'right',
       ionicon: 'arrow-forward-circle-outline',
     };
   }
   return {
-    line1: 'Turn counter-clockwise',
-    line2: `About ${Math.round(ad)}° to face the Qibla`,
+    turnSide: 'left',
     ionicon: 'arrow-back-circle-outline',
   };
 }

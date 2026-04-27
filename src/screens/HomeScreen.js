@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundDark,
   },
   safeTop: {
-    backgroundColor: Colors.backgroundBlue,
+    backgroundColor: 'rgba(2, 18, 38, 1)',
     paddingHorizontal: Spacing.md,
     paddingBottom: 0,
   },
@@ -261,9 +261,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
-    backgroundColor: 'rgba(2, 18, 38, 1)',
+    backgroundColor: 'transparent',
     paddingTop: 20,
-    paddingHorizontal: 20,
+    // paddingHorizontal: 20,
     paddingBottom: 10,
   },
   locationPill: {
@@ -304,9 +304,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 16,
-    // height: 300,
-    padding: 20,
+    gap: 20,
+    height: 250,
+    // padding: 20,
+    paddingTop: '20',
     backgroundColor: 'rgba(2, 18, 38, 1)',
   },
   heroTextBlock: {
@@ -315,12 +316,13 @@ const styles = StyleSheet.create({
   },
   nextPrayerName: {
     ...Fonts.bold,
-    fontSize: 32,
+    fontSize: 38,
     lineHeight: 38,
+    marginBottom: '10',
     color: Colors.gold,
   },
   nextPrayerNameCompact: {
-    fontSize: 24,
+    fontSize: 28,
     lineHeight: 30,
   },
   countdown: {
@@ -340,6 +342,7 @@ const styles = StyleSheet.create({
     color: '#8CA2BA',
     fontSize: 14,
     marginTop: 2,
+    marginBottom: '10',
   },
   heroControls: {
     flexDirection: 'row',
@@ -411,7 +414,7 @@ const styles = StyleSheet.create({
   },
   prayerListContent: {
     flexGrow: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
   },
   tabBarWrapper: {
     paddingBottom: 12,

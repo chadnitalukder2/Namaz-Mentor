@@ -5,10 +5,9 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
-  TouchableOpacity,
   ActivityIndicator,
-  ScrollView,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,17 +19,31 @@ import Svg, {
   Rect,
   Stop,
 } from 'react-native-svg';
-import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
-import LocationPinIllustration from '../components/LocationPinIllustration';
-import SettingsGearIllustration from '../components/SettingsGearIllustration';
+import { Colors, Fonts, Spacing } from '../constants/theme';
 import MainTabBar from '../components/MainTabBar';
 import { useQibla } from '../hooks/usePrayerData';
 
+/** Qibla — Figma https://www.figma.com/design/AFv20FFZyV3tJXlJBDMWLq/Namaz-Mentor-app--2?node-id=430-10944 (aligned to sibling 430-10881 where nodes match). */
+const FIGMA = {
+  bg: '#010D1D',
+  gold: '#E1B04E',
+  muted: '#8E9BAE',
+  dial: '#0A1628',
+};
+
 const COMPASS_SIZE = 300;
-const COMPASS_INNER = COMPASS_SIZE - 3;
+const RING_BORDER = 3;
+const COMPASS_INNER = COMPASS_SIZE - 2 * RING_BORDER;
 const NEEDLE_LEN = Math.round(COMPASS_INNER * 0.38);
 
-/** Soft halo behind compass (Figma-style vignette on dark sheet). */
+/** Gold ring around compass — RN cannot use CSS `linear-gradient` as `borderColor`. */
+const RING_GRADIENT = {
+  colors: ['rgba(249, 201, 113, 1)', 'rgba(166, 130, 65, 1)', 'rgba(92, 60, 1, 1)'],
+  locations: [0, 0.5, 1],
+  start: { x: 0, y: 0.5 },
+  end: { x: 1, y: 0.5 },
+};
+
 function CompassGlow() {
   const gid = `qg-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const w = 400;
@@ -46,9 +59,9 @@ function CompassGlow() {
     >
       <Defs>
         <SvgRadialGradient id={gid} cx="50%" cy="42%" rx="55%" ry="48%">
-          <Stop offset="0%" stopColor="rgba(18, 56, 89, 0.55)" />
-          <Stop offset="45%" stopColor="rgba(6, 24, 47, 0.25)" />
-          <Stop offset="100%" stopColor="rgba(2, 18, 38, 0)" />
+          <Stop offset="0%" stopColor="rgba(225, 176, 78, 0.08)" />
+          <Stop offset="55%" stopColor="rgba(6, 24, 47, 0.2)" />
+          <Stop offset="100%" stopColor="rgba(1, 13, 29, 0)" />
         </SvgRadialGradient>
       </Defs>
       <Rect x={0} y={0} width={w} height={h} fill={`url(#${gid})`} />
@@ -56,38 +69,49 @@ function CompassGlow() {
   );
 }
 
-/** Small Kaaba mark — vector, matches gold / dark Figma accents */
 function KaabaCenterMark({ size = 40 }) {
-  const gid = `k-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const ink = '#141B34';
+  const gold = '#D9AA55';
   return (
     <Svg
       width={size}
       height={size}
-      viewBox="0 0 40 40"
+      viewBox="0 0 32 32"
       fill="none"
       accessibilityRole="image"
       accessibilityLabel="Kaaba"
     >
-      <Defs>
-        <SvgLinearGradient id={gid} x1="20" y1="8" x2="20" y2="34" gradientUnits="userSpaceOnUse">
-          <Stop stopColor={Colors.goldStart} offset="0" />
-          <Stop stopColor={Colors.goldMid} offset="0.5" />
-          <Stop stopColor={Colors.goldEnd} offset="1" />
-        </SvgLinearGradient>
-      </Defs>
       <Path
-        d="M10 16 L20 11 L30 16 L30 28 L20 33 L10 28 Z"
-        fill={Colors.backgroundDark}
-        stroke={`url(#${gid})`}
-        strokeWidth={1.2}
+        d="M28 29.3334V6.66669C28 4.78107 28 3.83826 27.4143 3.25247C26.8284 2.66669 25.8856 2.66669 24 2.66669L8 2.66669C6.11439 2.66669 5.17157 2.66669 4.58579 3.25247C4 3.83826 4 4.78107 4 6.66669L4 29.3334"
+        fill={ink}
       />
-      <Path d="M20 11 L20 33" stroke={Colors.gold} strokeOpacity={0.35} strokeWidth={0.8} />
       <Path
-        d="M14 20 H26"
-        stroke={Colors.gold}
-        strokeOpacity={0.55}
-        strokeWidth={1}
+        d="M28 29.3334V6.66669C28 4.78107 28 3.83826 27.4143 3.25247C26.8284 2.66669 25.8856 2.66669 24 2.66669L8 2.66669C6.11439 2.66669 5.17157 2.66669 4.58579 3.25247C4 3.83826 4 4.78107 4 6.66669L4 29.3334"
+        stroke={ink}
+        strokeWidth={1.5}
         strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M9.33325 22.6667C9.33325 21.4096 9.33325 20.7811 9.72377 20.3905C10.1143 20 10.7428 20 11.9999 20H13.3333C14.5903 20 15.2189 20 15.6094 20.3905C15.9999 20.7811 15.9999 21.4096 15.9999 22.6667V29.3333H9.33325V22.6667Z"
+        stroke={gold}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M2.66675 29.3333H29.3334"
+        stroke={ink}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M4 8L28 8"
+        stroke={gold}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </Svg>
   );
@@ -95,35 +119,12 @@ function KaabaCenterMark({ size = 40 }) {
 
 function QiblaCompass({ bearingDeg, headingDeg, scale = 1 }) {
   const dialRotate = headingDeg != null ? -headingDeg : 0;
-  const tickCount = 72;
-  const r = COMPASS_INNER / 2 - 8;
 
   return (
     <View style={[compassStyles.root, scale !== 1 && { transform: [{ scale }] }]}>
-      <LinearGradient
-        colors={[Colors.goldStart, Colors.goldMid, Colors.goldEnd]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[compassStyles.ringBorder, compassStyles.ringShadow]}
-      >
+      <LinearGradient {...RING_GRADIENT} style={compassStyles.ringOuter}>
         <View style={compassStyles.ringInner}>
           <View style={[compassStyles.dial, { transform: [{ rotate: `${dialRotate}deg` }] }]}>
-            {Array.from({ length: tickCount }).map((_, i) => {
-              const isMajor = i % 6 === 0;
-              return (
-                <View
-                  key={i}
-                  style={[
-                    compassStyles.tick,
-                    isMajor ? compassStyles.tickMajor : compassStyles.tickMinor,
-                    {
-                      transform: [{ rotate: `${i * 5}deg` }, { translateY: -r }],
-                    },
-                  ]}
-                />
-              );
-            })}
-
             <Text style={[compassStyles.cardinal, compassStyles.north]}>N</Text>
             <Text style={[compassStyles.cardinal, compassStyles.east]}>E</Text>
             <Text style={[compassStyles.cardinal, compassStyles.south]}>S</Text>
@@ -131,7 +132,7 @@ function QiblaCompass({ bearingDeg, headingDeg, scale = 1 }) {
 
             <View style={[compassStyles.needlePivot, { transform: [{ rotate: `${bearingDeg}deg` }] }]}>
               <LinearGradient
-                colors={[Colors.goldStart, Colors.goldMid]}
+                colors={[FIGMA.gold, '#C9A050']}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 1 }}
                 style={compassStyles.needleNorth}
@@ -153,32 +154,23 @@ const compassStyles = StyleSheet.create({
   root: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: Spacing.sm,
   },
-  ringBorder: {
+  ringOuter: {
     width: COMPASS_SIZE,
     height: COMPASS_SIZE,
     borderRadius: COMPASS_SIZE / 2,
-    padding: 1.5,
+    padding: RING_BORDER,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  ringShadow: {
-    shadowColor: Colors.goldMid,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.22,
-    shadowRadius: 24,
-    elevation: 14,
+    overflow: 'hidden',
   },
   ringInner: {
     width: COMPASS_INNER,
     height: COMPASS_INNER,
     borderRadius: COMPASS_INNER / 2,
-    backgroundColor: Colors.backgroundMedium,
+    backgroundColor: 'rgba(23, 41, 64, 1)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
     overflow: 'hidden',
   },
   dial: {
@@ -187,43 +179,16 @@ const compassStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tick: {
-    position: 'absolute',
-    width: 2,
-    borderRadius: 1,
-    top: '50%',
-    left: '50%',
-    marginLeft: -1,
-  },
-  tickMinor: {
-    height: 6,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-  },
-  tickMajor: {
-    height: 12,
-    backgroundColor: 'rgba(217, 170, 85, 0.45)',
-  },
   cardinal: {
     position: 'absolute',
     ...Fonts.bold,
-    fontSize: 14,
+    fontSize: 13,
+    color: FIGMA.muted,
   },
-  north: {
-    top: 6,
-    color: Colors.gold,
-  },
-  south: {
-    bottom: 6,
-    color: Colors.textGrey,
-  },
-  east: {
-    right: 6,
-    color: Colors.textGrey,
-  },
-  west: {
-    left: 6,
-    color: Colors.textGrey,
-  },
+  north: { top: 8 },
+  south: { bottom: 8 },
+  east: { right: 8 },
+  west: { left: 8 },
   needlePivot: {
     position: 'absolute',
     top: '50%',
@@ -243,7 +208,7 @@ const compassStyles = StyleSheet.create({
   needleSouth: {
     width: 5,
     height: NEEDLE_LEN / 2,
-    backgroundColor: 'rgba(142, 143, 157, 0.45)',
+    backgroundColor: 'rgba(142, 155, 174, 0.35)',
     borderBottomLeftRadius: 2.5,
     borderBottomRightRadius: 2.5,
   },
@@ -251,6 +216,7 @@ const compassStyles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: COMPASS_INNER * 0.28,
   },
 });
 
@@ -268,113 +234,77 @@ export default function QiblaScreen({ navigation }) {
   const isCompact = width < 380;
   const isSmall = width < 340;
   const compassScale = isSmall ? 0.76 : isCompact ? 0.88 : 1;
-  const compassStageMinHeight = Math.round(320 * compassScale) + 28;
   const formattedDistance = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 0,
   }).format(Math.round(distanceKm));
+  const androidTopInset =
+    Platform.OS === 'android' ? Math.max(StatusBar.currentHeight || 0, 24) : 0;
+
+  const turnSecondLine = () => {
+    if (!headingAvailable) return null;
+    if (turnHint.turnSide === 'aligned') {
+      return <Text style={styles.turnMuted}>Facing Qibla</Text>;
+    }
+    if (turnHint.turnSide === 'left' || turnHint.turnSide === 'right') {
+      const w = turnHint.turnSide;
+      return (
+        <Text style={styles.turnLine}>
+          Turn to your{' '}
+          <Text style={styles.turnBold}>{w}</Text>
+        </Text>
+      );
+    }
+    return null;
+  };
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundBlue} />
+      <StatusBar barStyle="light-content" backgroundColor={FIGMA.bg} />
 
-      <SafeAreaView style={styles.safeTop}>
-        <View style={styles.header}>
+      <SafeAreaView style={[styles.safe, androidTopInset > 0 && { paddingTop: androidTopInset }]}>
+        <View style={[styles.headerRow, isCompact && styles.headerRowCompact]}>
           <View style={styles.headerLeft}>
-            <Text style={[styles.screenTitle, isCompact && styles.screenTitleCompact]}>Qibla</Text>
-            <Text style={styles.screenTagline}>Sacred direction</Text>
-            <View style={[styles.locationPill, isCompact && styles.locationPillCompact]}>
-              <LocationPinIllustration size={20} centerFill={Colors.backgroundBlue} />
-              <Text style={styles.locationText} numberOfLines={1}>
-                {!ready ? 'Locating…' : locationLabel}
-              </Text>
-              {!ready && <ActivityIndicator size="small" color={Colors.textGrey} style={styles.locSpinner} />}
+            <Text style={styles.locationGold} numberOfLines={2}>
+              {!ready ? 'Locating…' : locationLabel}
+            </Text>
+            <View style={styles.turnHintWrap}>
+              {!ready ? (
+                <ActivityIndicator size="small" color={FIGMA.gold} style={styles.locSpinner} />
+              ) : (
+                turnSecondLine()
+              )}
             </View>
           </View>
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => navigation?.navigate('Settings')}
-            accessibilityRole="button"
-            accessibilityLabel="Open settings"
-          >
-            <SettingsGearIllustration size={22} />
-          </TouchableOpacity>
+          <View style={styles.headerRight}>
+            <Text style={[styles.degreeBig, isCompact && styles.degreeBigCompact]}>
+              {Math.round(bearingDeg)}°
+            </Text>
+            <Text style={styles.toQiblaMuted}>to Qibla</Text>
+          </View>
         </View>
-      </SafeAreaView>
 
-      <View style={styles.sheet}>
-        <View style={styles.sheetHandle} />
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={[styles.scrollContent, isCompact && styles.scrollContentCompact]}
-          showsVerticalScrollIndicator={false}
-          bounces
-        >
-          <View style={[styles.compassStage, { minHeight: compassStageMinHeight }, isCompact && styles.compassStageCompact]}>
-            <CompassGlow />
-            <QiblaCompass bearingDeg={bearingDeg} headingDeg={headingDeg} scale={compassScale} />
+        <View style={styles.compassBlock}>
+          <CompassGlow />
+          <QiblaCompass bearingDeg={bearingDeg} headingDeg={headingDeg} scale={compassScale} />
+        </View>
+
+        <View style={[styles.distanceBlock, isCompact && styles.distanceBlockCompact]}>
+          <Ionicons name="arrow-up-outline" size={22} color={FIGMA.gold} style={styles.distanceArrow} />
+          <View style={styles.distanceTextCol}>
+            <Text style={styles.distanceLabel}>Distance to Makkah</Text>
+            <Text style={[styles.distanceValue, isCompact && styles.distanceValueCompact]}>
+              {formattedDistance} km
+            </Text>
           </View>
+        </View>
 
-          <View style={[styles.bearingBlock, isCompact && styles.bearingBlockCompact]}>
-            <LinearGradient
-              colors={[Colors.goldStart, Colors.goldMid, Colors.goldEnd]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.degreeDegBorder}
-            >
-              <View style={[styles.degreeDegInner, isCompact && styles.degreeDegInnerCompact]}>
-                <Text style={[styles.degreeValue, isCompact && styles.degreeValueCompact]}>
-                  {Math.round(bearingDeg)}°
-                </Text>
-                <Text style={styles.degreeCaption}>to Qibla</Text>
-              </View>
-            </LinearGradient>
-          </View>
+        <Text style={styles.northHint}>Point your device north for accurate reading</Text>
 
-          <View style={[styles.hintPanel, isCompact && styles.hintPanelCompact]}>
-            <View style={styles.hintIconCircle}>
-              <Ionicons name={turnHint.ionicon} size={22} color={Colors.gold} />
-            </View>
-            <Text style={[styles.hintTitle, isCompact && styles.hintTitleCompact]}>{turnHint.line1}</Text>
-            <Text style={[styles.hintSub, isCompact && styles.hintSubCompact]}>{turnHint.line2}</Text>
-          </View>
-
-          <View style={[styles.infoCard, isCompact && styles.infoCardCompact]}>
-            <LinearGradient
-              colors={['rgba(249, 201, 113, 0.18)', 'rgba(92, 60, 1, 0.08)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.infoCardGlow}
-            />
-            <View style={styles.infoCardRow}>
-              <View style={styles.infoIconWrap}>
-                <Ionicons name="map-outline" size={22} color={Colors.gold} />
-              </View>
-              <View style={styles.infoCardMid}>
-                <Text style={styles.infoCardTitle}>Distance to Makkah</Text>
-                <Text style={[styles.distanceKm, isCompact && styles.distanceKmCompact]}>
-                  {formattedDistance} km
-                </Text>
-              </View>
-            </View>
-            <View style={styles.infoFoot}>
-              <Ionicons
-                name={headingAvailable ? 'compass-outline' : 'information-circle-outline'}
-                size={18}
-                color={Colors.textMuted}
-              />
-              <Text style={styles.infoFootText}>
-                {headingAvailable
-                  ? 'Hold the phone flat. Move away from metal or magnets for a stable reading.'
-                  : 'Live compass is unavailable here — use the gold needle as a fixed bearing from north.'}
-              </Text>
-            </View>
-          </View>
-        </ScrollView>
-
+        <View style={styles.tabSpacer} />
         <View style={styles.tabBarWrapper}>
           <MainTabBar activeTab="qibla" navigation={navigation} />
         </View>
-      </View>
+      </SafeAreaView>
     </View>
   );
 }
@@ -382,263 +312,136 @@ export default function QiblaScreen({ navigation }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.backgroundDark,
+    backgroundColor: FIGMA.bg,
   },
-  safeTop: {
-    backgroundColor: Colors.backgroundBlue,
+  safe: {
+    flex: 1,
+    backgroundColor: FIGMA.bg,
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    paddingTop: Spacing.sm,
+    paddingTop: 20,
+    paddingBottom: 10,
+    paddingLeft: 20,
+    paddingRight: 20,
+    gap: 16,
+  },
+  headerRowCompact: {
+    paddingHorizontal: 0,
   },
   headerLeft: {
     flex: 1,
-    marginRight: Spacing.sm,
+    minWidth: 0,
+    paddingRight: 8,
   },
-  screenTitle: {
-    ...Fonts.bold,
-    fontSize: 28,
-    color: Colors.textWhite,
-    letterSpacing: -0.5,
+  headerRight: {
+    alignItems: 'flex-end',
+    flexShrink: 0,
   },
-  screenTitleCompact: {
-    fontSize: 24,
-    letterSpacing: -0.3,
-  },
-  screenTagline: {
-    ...Fonts.regular,
-    fontSize: 13,
-    color: Colors.textGrey,
-    marginTop: 4,
-  },
-  locationPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 14,
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(23, 68, 108, 0.55)',
-    paddingVertical: 6,
-    paddingRight: 14,
-    paddingLeft: 8,
-    borderRadius: Radius.round,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    maxWidth: '100%',
-  },
-  locationPillCompact: {
-    marginTop: 10,
-    paddingRight: 12,
-  },
-  locationText: {
+  locationGold: {
     ...Fonts.semiBold,
     fontSize: 15,
-    color: Colors.textWhite,
-    flexShrink: 1,
+    lineHeight: 20,
+    color: FIGMA.gold,
   },
   locSpinner: {
-    marginLeft: 4,
+    alignSelf: 'flex-start',
   },
-  iconBtn: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
+  turnHintWrap: {
+    minHeight: 24,
     justifyContent: 'center',
-    borderRadius: 22,
-    marginTop: 4,
+    marginTop: 6,
   },
-  sheet: {
-    flex: 1,
-    backgroundColor: Colors.backgroundDark,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  sheetHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.dotInactiveDark,
-    alignSelf: 'center',
-    marginBottom: Spacing.xs,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
-  },
-  scrollContentCompact: {
-    paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.lg,
-  },
-  compassStage: {
-    position: 'relative',
-    minHeight: 320,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: -Spacing.sm,
-  },
-  compassStageCompact: {
-    marginHorizontal: 0,
-  },
-  bearingBlock: {
-    alignItems: 'center',
-    marginTop: Spacing.lg,
-  },
-  bearingBlockCompact: {
-    marginTop: Spacing.md,
-  },
-  degreeDegBorder: {
-    borderRadius: Radius.round,
-    padding: 1.5,
-    minWidth: 148,
-  },
-  degreeDegInner: {
-    borderRadius: Radius.round - 1,
-    backgroundColor: Colors.backgroundMedium,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  degreeDegInnerCompact: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-  },
-  degreeValue: {
-    ...Fonts.bold,
-    fontSize: 30,
-    color: Colors.textWarmCream,
-    fontVariant: ['tabular-nums'],
-  },
-  degreeValueCompact: {
-    fontSize: 26,
-  },
-  degreeCaption: {
+  turnLine: {
     ...Fonts.regular,
-    fontSize: 12,
-    color: Colors.textMuted,
-    marginTop: 4,
-    letterSpacing: 0.3,
+    fontSize: 15,
+    color: Colors.textWhite,
+    lineHeight: 22,
+    flexShrink: 1,
   },
-  hintPanel: {
-    marginTop: Spacing.xl,
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
+  turnBold: {
+    ...Fonts.bold,
+    color: Colors.textWhite,
   },
-  hintPanelCompact: {
-    marginTop: Spacing.lg,
-    paddingHorizontal: Spacing.sm,
-  },
-  hintIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(23, 68, 108, 0.45)',
-    borderWidth: 1,
-    borderColor: 'rgba(217, 170, 85, 0.22)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.sm,
-  },
-  hintTitle: {
-    ...Fonts.semiBold,
-    fontSize: 17,
-    color: Colors.textLight,
-    textAlign: 'center',
-  },
-  hintTitleCompact: {
-    fontSize: 16,
-  },
-  hintSub: {
+  turnMuted: {
     ...Fonts.regular,
     fontSize: 14,
-    color: Colors.textMuted,
-    marginTop: 8,
-    lineHeight: 21,
-    textAlign: 'center',
-    maxWidth: 320,
+    color: FIGMA.muted,
+    flexShrink: 1,
   },
-  hintSubCompact: {
-    fontSize: 13,
-    lineHeight: 19,
+  degreeBig: {
+    ...Fonts.bold,
+    fontSize: 36,
+    color: FIGMA.gold,
+    fontVariant: ['tabular-nums'],
+    letterSpacing: -0.5,
   },
-  infoCard: {
-    marginTop: Spacing.xl,
-    borderRadius: Radius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    backgroundColor: Colors.backgroundCard,
-    overflow: 'hidden',
+  degreeBigCompact: {
+    fontSize: 30,
   },
-  infoCardCompact: {
-    marginTop: Spacing.lg,
+  toQiblaMuted: {
+    ...Fonts.regular,
+    fontSize: 12,
+    color: FIGMA.muted,
+    marginTop: 2,
   },
-  infoCardGlow: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 1,
+  compassBlock: {
+    flex: 1,
+    minHeight: 280,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: Spacing.md,
   },
-  infoCardRow: {
+  distanceBlock: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 340,
+    paddingHorizontal: Spacing.xs,
   },
-  infoIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(2, 18, 38, 0.65)',
-    borderWidth: 1,
-    borderColor: 'rgba(217, 170, 85, 0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  distanceBlockCompact: {
+    gap: 12,
   },
-  infoCardMid: {
+  distanceArrow: {
+    transform: [{ rotate: '45deg' }],
+  },
+  distanceTextCol: {
     flex: 1,
   },
-  infoCardTitle: {
+  distanceLabel: {
     ...Fonts.medium,
-    fontSize: 14,
-    color: Colors.textGrey,
-  },
-  distanceKm: {
-    ...Fonts.bold,
-    fontSize: 26,
+    fontSize: 15,
     color: Colors.textWhite,
+  },
+  distanceValue: {
+    ...Fonts.bold,
+    fontSize: 28,
+    color: FIGMA.gold,
     marginTop: 4,
     fontVariant: ['tabular-nums'],
   },
-  distanceKmCompact: {
-    fontSize: 22,
+  distanceValueCompact: {
+    fontSize: 24,
   },
-  infoFoot: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    marginTop: Spacing.md,
-    paddingTop: Spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  infoFootText: {
+  northHint: {
     ...Fonts.regular,
-    fontSize: 13,
-    color: Colors.textMuted,
-    flex: 1,
-    lineHeight: 19,
+    fontSize: 12,
+    color: FIGMA.muted,
+    textAlign: 'center',
+    marginTop: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+  },
+  tabSpacer: {
+    flexGrow: 0,
+    minHeight: Spacing.sm,
   },
   tabBarWrapper: {
-    paddingBottom: Spacing.lg,
+    paddingBottom: Spacing.md,
     paddingTop: Spacing.sm,
   },
 });
