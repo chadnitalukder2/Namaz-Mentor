@@ -96,11 +96,12 @@ export const AL_FATIHAH_AYAHS = [
   },
 ];
 
+/** `hisnEnChapterId` maps to https://www.hisnmuslim.com/api/en/{id}.json (English Hisn al-Muslim). */
 export const DHIKR_CATEGORIES = [
-  { id: 'morning', name: 'Morning Adhkar', count: 15, icon: 'sun' },
-  { id: 'evening', name: 'Evening Adhkar', count: 12, icon: 'moon' },
-  { id: 'after-salah', name: 'After Salah', count: 8, icon: 'dua' },
-  { id: 'before-sleep', name: 'Before Sleep', count: 10, icon: 'sleep' },
+  { id: 'morning', name: 'Morning Adhkar', count: 15, icon: 'morning', hisnEnChapterId: 27 },
+  { id: 'evening', name: 'Evening Adhkar', count: 12, icon: 'evening', hisnEnChapterId: 27 },
+  { id: 'after-salah', name: 'After Salah', count: 8, icon: 'afterSalah', hisnEnChapterId: 25 },
+  { id: 'before-sleep', name: 'Before Sleep', count: 10, icon: 'beforeSleep', hisnEnChapterId: 28 },
 ];
 
 export const MORNING_ADHKAR = [

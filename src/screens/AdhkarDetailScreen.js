@@ -37,6 +37,7 @@ export default function AdhkarDetailScreen({ navigation, route }) {
             <Text style={styles.title}>{category.name}</Text>
             <Text style={styles.subtitle}>{category.count} Adhkar</Text>
           </View>
+
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>

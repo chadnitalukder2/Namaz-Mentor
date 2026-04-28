@@ -1,4 +1,4 @@
-import React, { useId, useState } from 'react';
+import React, { useId, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,24 +12,207 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Path, Stop } from 'react-native-svg';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
 import { DHIKR_CATEGORIES } from '../constants/data';
+import { fetchHisnChapterItemCount } from '../services/adhkarApi';
 import { TabDhikrIcon } from '../components/MainTabIcons';
 
 const TARGET_PRESETS = [33, 99, 100, 1000];
 
-const CATEGORY_VECTOR = {
-  sun: { lib: 'mci', name: 'weather-sunset-up' },
-  moon: { lib: 'mci', name: 'weather-night' },
-  dua: { lib: 'mci', name: 'hands-pray' },
-  sleep: { lib: 'mci', name: 'power-sleep' },
+const MORNING_SUN_CIRCLE_D =
+  'M33.3295 24.9961C33.3295 29.5984 29.5985 33.3294 24.9962 33.3294C20.3938 33.3294 16.6628 29.5984 16.6628 24.9961C16.6628 20.3937 20.3938 16.6627 24.9962 16.6627C29.5985 16.6627 33.3295 20.3937 33.3295 24.9961Z';
+const MORNING_SUN_RAYS_D =
+  'M24.9886 9.99609H25.0036M24.9896 39.9961H25.0046M35.5941 14.3894H35.6091M14.3862 35.6028H14.4012M14.3862 14.3902H14.4012M35.5931 35.6036H35.6081M39.9811 24.9971H39.9961M9.99609 24.9971H10.0111';
+
+function MorningSunListIcon({ size }) {
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '_');
+  const paint0 = `${uid}_ms0`;
+  const paint1 = `${uid}_ms1`;
+  const muted = Colors.textMuted;
+
+  return (
+    <Svg width={size} height={size} viewBox="0 0 50 50" fill="none">
+      <Defs>
+        <SvgLinearGradient id={paint0} x1="24.9978" y1="16.6631" x2="24.9969" y2="33.3294" gradientUnits="userSpaceOnUse">
+          <Stop offset="0" stopColor="#F9C971" />
+          <Stop offset="0.5" stopColor="#A68241" />
+          <Stop offset="1" stopColor="#5C3C01" />
+        </SvgLinearGradient>
+        <SvgLinearGradient id={paint1} x1="24.9978" y1="16.6631" x2="24.9969" y2="33.3294" gradientUnits="userSpaceOnUse">
+          <Stop offset="0" stopColor="#F9C971" />
+          <Stop offset="0.5" stopColor="#A68241" />
+          <Stop offset="1" stopColor="#5C3C01" />
+        </SvgLinearGradient>
+      </Defs>
+      <Path d={MORNING_SUN_CIRCLE_D} fill={muted} />
+      <Path d={MORNING_SUN_CIRCLE_D} fill={`url(#${paint0})`} />
+      <Path d={MORNING_SUN_CIRCLE_D} stroke={muted} strokeWidth={1.5} fill="none" />
+      <Path d={MORNING_SUN_CIRCLE_D} stroke={`url(#${paint1})`} strokeWidth={1.5} fill="none" />
+      <Path
+        d={MORNING_SUN_RAYS_D}
+        stroke={muted}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </Svg>
+  );
+}
+
+const EVENING_MOON_D =
+  'M36.0795 27.4209C34.6799 28.1681 33.0813 28.5918 31.3838 28.5918C25.8701 28.5918 21.4004 24.1221 21.4004 18.6084C21.4004 16.9109 21.8241 15.3123 22.5714 13.9127C17.6084 15.0759 13.9128 19.5304 13.9128 24.848C13.9128 31.0509 18.9413 36.0794 25.1442 36.0794C30.4619 36.0794 34.9163 32.3839 36.0795 27.4209Z';
+
+function EveningMoonListIcon({ size }) {
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '_');
+  const paint0 = `${uid}_ev0`;
+  const paint1 = `${uid}_ev1`;
+
+  return (
+    <Svg width={size} height={size} viewBox="0 0 50 50" fill="none">
+      <Defs>
+        <SvgLinearGradient id={paint0} x1="24.9984" y1="13.9133" x2="24.9972" y2="36.0794" gradientUnits="userSpaceOnUse">
+          <Stop offset="0" stopColor="#F9C971" />
+          <Stop offset="0.5" stopColor="#A68241" />
+          <Stop offset="1" stopColor="#5C3C01" />
+        </SvgLinearGradient>
+        <SvgLinearGradient id={paint1} x1="24.9984" y1="13.9133" x2="24.9972" y2="36.0794" gradientUnits="userSpaceOnUse">
+          <Stop offset="0" stopColor="#F9C971" />
+          <Stop offset="0.5" stopColor="#A68241" />
+          <Stop offset="1" stopColor="#5C3C01" />
+        </SvgLinearGradient>
+      </Defs>
+      <Path
+        d={EVENING_MOON_D}
+        fill={`url(#${paint0})`}
+        stroke={`url(#${paint1})`}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+const AFTER_SALAH_HAND_R_D =
+  'M31.9961 25.9961L31.3378 25.3378C30.5857 24.5857 29.3764 24.5539 28.5857 25.2655L25.9892 27.6023C25.3571 28.1712 24.9961 28.9817 24.9961 29.8322V33.9961H27.6826C28.5199 33.9961 29.3191 33.6462 29.887 33.0309L34.2005 28.358C34.712 27.8038 34.9961 27.0773 34.9961 26.3231V18.9961H33.9961C32.8915 18.9961 31.9961 19.8915 31.9961 20.9961V25.9961ZM31.9961 25.9961L28.9961 28.9961L31.9961 25.9961Z';
+const AFTER_SALAH_HAND_L_D =
+  'M17.9961 25.9961L18.6544 25.3378C19.4065 24.5857 20.6158 24.5539 21.4065 25.2655L24.003 27.6023C24.6351 28.1712 24.9961 28.9817 24.9961 29.8322V33.9961H22.3096C21.4723 33.9961 20.6731 33.6462 20.1052 33.0309L15.7917 28.358C15.2801 27.8038 14.9961 27.0773 14.9961 26.3231V18.9961H15.9961C17.1007 18.9961 17.9961 19.8915 17.9961 20.9961V25.9961ZM17.9961 25.9961L20.9961 28.9961L17.9961 25.9961Z';
+const AFTER_SALAH_ARC_D =
+  'M27.9961 20.4304C27.4308 21.3686 26.4021 21.9961 25.2269 21.9961C23.4426 21.9961 21.9961 20.5496 21.9961 18.7653C21.9961 17.5901 22.6236 16.5614 23.5618 15.9961';
+const AFTER_SALAH_DOT_D = 'M26.9961 16.9961H27.0051';
+
+const BEFORE_SLEEP_MOON_D =
+  'M30.4961 30.9961C30.2089 30.2369 29.9524 29.1336 28.9961 28.4961C27.4961 27.4961 25.9961 26.9961 25.9961 25.4961C25.9961 23.9961 25.4961 20.9961 25.4961 20.9961L26.1916 20.2641C27.8896 21.0207 29.4961 18.8768 29.4961 17.4961C29.4961 16.1154 28.3768 14.9961 26.9961 14.9961C25.6154 14.9961 24.4961 16.1154 24.4961 17.4961C24.4961 18.4961 23.6961 19.0961 22.4961 19.4961C20.9961 19.9961 18.9961 20.9961 18.9961 25.9961C18.9961 29.9961 20.8294 31.3294 21.4961 31.9961C18.2961 31.9961 17.4961 33.9961 17.4961 34.9961H30.4961C31.6007 34.9961 32.4961 34.1007 32.4961 32.9961C32.4961 31.8915 31.6007 30.9961 30.4961 30.9961ZM30.4961 30.9961C22.768 30.9961 22.056 26.3294 22.4961 23.9961';
+
+/** Same vertical gold ramp as morning sun / evening moon (50×50 artboard). */
+const CATEGORY_GOLD_GRAD = {
+  x1: '24.9984',
+  y1: '13.9133',
+  x2: '24.9972',
+  y2: '36.0794',
 };
 
-function CategoryListIcon({ iconKey, size = 22 }) {
-  const spec = CATEGORY_VECTOR[iconKey] || CATEGORY_VECTOR.dua;
+function CategoryGoldGradientDefs({ gradId }) {
+  return (
+    <SvgLinearGradient id={gradId} x1={CATEGORY_GOLD_GRAD.x1} y1={CATEGORY_GOLD_GRAD.y1} x2={CATEGORY_GOLD_GRAD.x2} y2={CATEGORY_GOLD_GRAD.y2} gradientUnits="userSpaceOnUse">
+      <Stop offset="0" stopColor={Colors.goldStart} />
+      <Stop offset="0.5" stopColor={Colors.goldMid} />
+      <Stop offset="1" stopColor={Colors.goldEnd} />
+    </SvgLinearGradient>
+  );
+}
+
+function AfterSalahListIcon({ size }) {
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '_');
+  const gradId = `${uid}_asg`;
+  const goldUrl = `url(#${gradId})`;
+
+  return (
+    <Svg width={size} height={size} viewBox="0 0 50 50" fill="none">
+      <Defs>
+        <CategoryGoldGradientDefs gradId={gradId} />
+      </Defs>
+      <Path d={AFTER_SALAH_HAND_R_D} fill={goldUrl} />
+      <Path d={AFTER_SALAH_HAND_L_D} fill={goldUrl} />
+      <Path d={AFTER_SALAH_ARC_D} stroke={goldUrl} strokeWidth={1.5} strokeLinecap="round" fill="none" />
+      <Path
+        d={AFTER_SALAH_DOT_D}
+        stroke={goldUrl}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </Svg>
+  );
+}
+
+function BeforeSleepListIcon({ size }) {
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '_');
+  const gradId = `${uid}_slg`;
+  const goldUrl = `url(#${gradId})`;
+
+  return (
+    <Svg width={size} height={size} viewBox="0 0 50 50" fill="none">
+      <Defs>
+        <CategoryGoldGradientDefs gradId={gradId} />
+      </Defs>
+      <Path
+        d={BEFORE_SLEEP_MOON_D}
+        stroke={goldUrl}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </Svg>
+  );
+}
+
+function usesPlainLibraryIconSlot(iconKey) {
+  return (
+    iconKey === 'morning' ||
+    iconKey === 'sun' ||
+    iconKey === 'evening' ||
+    iconKey === 'moon' ||
+    iconKey === 'afterSalah' ||
+    iconKey === 'dua' ||
+    iconKey === 'sleep' ||
+    iconKey === 'beforeSleep'
+  );
+}
+
+const CATEGORY_VECTOR = {
+  sun: { lib: 'custom', render: 'morningSun' },
+  morning: { lib: 'custom', render: 'morningSun' },
+  moon: { lib: 'custom', render: 'eveningMoon' },
+  evening: { lib: 'custom', render: 'eveningMoon' },
+  afterSalah: { lib: 'custom', render: 'afterSalah' },
+  dua: { lib: 'custom', render: 'afterSalah' },
+  sleep: { lib: 'custom', render: 'beforeSleep' },
+  beforeSleep: { lib: 'custom', render: 'beforeSleep' },
+};
+
+const CATEGORY_ICON_FALLBACK = { lib: 'mci', name: 'hands-pray' };
+
+function CategoryListIcon({ iconKey, size = 50 }) {
+  const spec = CATEGORY_VECTOR[iconKey] || CATEGORY_ICON_FALLBACK;
   const color = Colors.gold;
+  if (spec.lib === 'custom' && spec.render === 'morningSun') {
+    return <MorningSunListIcon size={size} />;
+  }
+  if (spec.lib === 'custom' && spec.render === 'eveningMoon') {
+    return <EveningMoonListIcon size={size} />;
+  }
+  if (spec.lib === 'custom' && spec.render === 'afterSalah') {
+    return <AfterSalahListIcon size={size} />;
+  }
+  if (spec.lib === 'custom' && spec.render === 'beforeSleep') {
+    return <BeforeSleepListIcon size={size} />;
+  }
   if (spec.lib === 'mci') {
     return <MaterialCommunityIcons name={spec.name} size={size} color={color} />;
   }
@@ -245,11 +428,40 @@ export default function DhikrScreen({ navigation }) {
   const [count, setCount] = useState(0);
   const [target, setTarget] = useState(33);
   const [targetModal, setTargetModal] = useState(false);
+  const [adhkarCountsByCategoryId, setAdhkarCountsByCategoryId] = useState({});
   const { width } = useWindowDimensions();
   const isCompact = width < 380;
   const isSmall = width < 340;
 
   const ringGradId = `tasbih-ring-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const chapterIds = [
+        ...new Set(
+          DHIKR_CATEGORIES.map((c) => c.hisnEnChapterId).filter((id) => id != null && Number.isFinite(Number(id)))
+        ),
+      ];
+      const countByChapter = new Map();
+      await Promise.all(
+        chapterIds.map(async (chapterId) => {
+          const n = await fetchHisnChapterItemCount(chapterId);
+          if (!cancelled && n != null) countByChapter.set(chapterId, n);
+        })
+      );
+      if (cancelled) return;
+      const next = {};
+      for (const cat of DHIKR_CATEGORIES) {
+        const n = countByChapter.get(cat.hisnEnChapterId);
+        if (n != null) next[cat.id] = n;
+      }
+      setAdhkarCountsByCategoryId(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -269,7 +481,10 @@ export default function DhikrScreen({ navigation }) {
           />
         </View>
 
-        <View style={styles.divider} />
+        <View style={styles.divider} 
+        >
+          <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>Dhikr Library</Text>
+        </View>
 
         <ScrollView
           style={styles.libraryScroll}
@@ -277,8 +492,7 @@ export default function DhikrScreen({ navigation }) {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.sectionLabel}>LIBRARY</Text>
-          <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>Dhikr Library</Text>
+        
 
           <View style={[styles.libraryList, isCompact && styles.libraryListCompact]}>
             {DHIKR_CATEGORIES.map((cat) => (
@@ -288,21 +502,29 @@ export default function DhikrScreen({ navigation }) {
                 activeOpacity={0.72}
                 onPress={() => navigation?.navigate('AdhkarDetail', { category: cat })}
               >
-                <LinearGradient
-                  colors={['rgba(249, 201, 113, 0.12)', 'rgba(23, 68, 108, 0.35)']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[styles.libraryIconBg, isCompact && styles.libraryIconBgCompact]}
-                >
-                  <CategoryListIcon iconKey={cat.icon} size={isCompact ? 20 : 22} />
-                </LinearGradient>
+                {usesPlainLibraryIconSlot(cat.icon) ? (
+                  <View style={[styles.libraryIconPlain, isCompact && styles.libraryIconPlainCompact]}>
+                    <CategoryListIcon iconKey={cat.icon} size={isCompact ? 28 : 50} />
+                  </View>
+                ) : (
+                  <LinearGradient
+                    colors={['rgba(249, 201, 113, 0.12)', 'rgba(23, 68, 108, 0.35)']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[styles.libraryIconBg, isCompact && styles.libraryIconBgCompact]}
+                  >
+                    <CategoryListIcon iconKey={cat.icon} size={isCompact ? 20 : 22} />
+                  </LinearGradient>
+                )}
                 <View style={styles.libraryInfo}>
                   <Text style={[styles.libraryName, isCompact && styles.libraryNameCompact]} numberOfLines={1}>
                     {cat.name}
                   </Text>
-                  <Text style={styles.libraryCount}>{cat.count} Adhkar</Text>
+                  <Text style={styles.libraryCount}>
+                    {adhkarCountsByCategoryId[cat.id] ?? cat.count} Adhkar
+                  </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+                <Ionicons name="chevron-forward" size={18} color={'rgba(217, 170, 85, 1)'} />
               </TouchableOpacity>
             ))}
           </View>
@@ -408,8 +630,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
   },
   divider: {
-    height: 1,
-    backgroundColor: Colors.separator,
     marginVertical: Spacing.md,
   },
   sectionLabel: {
@@ -420,17 +640,16 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sectionTitle: {
-    ...Fonts.bold,
-    fontSize: 20,
-    color: Colors.textWhite,
-    marginBottom: Spacing.md,
+    ...Fonts.medium,
+    fontSize: 18,
+    color: 'rgba(245, 247, 250, 1)',
   },
   sectionTitleCompact: {
     fontSize: 18,
     marginBottom: Spacing.sm + 4,
   },
   libraryList: {
-    gap: Spacing.sm,
+    gap: 12,
     paddingBottom: Spacing.md,
   },
   libraryListCompact: {
@@ -439,12 +658,10 @@ const styles = StyleSheet.create({
   libraryItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.backgroundMedium,
-    borderRadius: Radius.md,
+    backgroundColor: 'rgba(6, 24, 47, 1)',
+    borderRadius: '18px',
     padding: Spacing.md,
     gap: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.separator,
   },
   libraryItemCompact: {
     padding: Spacing.sm + 6,
@@ -464,11 +681,21 @@ const styles = StyleSheet.create({
     height: 46,
     borderRadius: Radius.md,
   },
+  libraryIconPlain: {
+    width: 52,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  libraryIconPlainCompact: {
+    width: 46,
+    height: 46,
+  },
   libraryInfo: { flex: 1 },
   libraryName: {
-    ...Fonts.bold,
+    ...Fonts.semiBold,
     fontSize: 16,
-    color: Colors.textWhite,
+    color: 'rgba(245, 247, 250, 1)',
   },
   libraryNameCompact: {
     fontSize: 15,
@@ -476,7 +703,7 @@ const styles = StyleSheet.create({
   libraryCount: {
     ...Fonts.regular,
     fontSize: 13,
-    color: Colors.textMuted,
+    color: 'rgba(166, 150, 119, 1)',
     marginTop: 4,
   },
   modalBackdrop: {
