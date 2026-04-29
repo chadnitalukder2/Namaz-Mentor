@@ -38,6 +38,7 @@ export default function MainTabNavigator() {
       screenOptions={{
         headerShown: false,
         lazy: false,
+        sceneStyle: { backgroundColor: Colors.backgroundDark },
       }}
     >
       <Tab.Screen name="Home" component={HomeScreen} />

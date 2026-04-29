@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -18,17 +18,30 @@ import SettingsScreen from '../screens/SettingsScreen';
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 
 const Stack = createNativeStackNavigator();
+const NAV_THEME = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: '#021226',
+    card: '#021226',
+  },
+};
 
 export default function AppNavigator() {
   return (
     <SafeAreaProvider style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>
-        <NavigationContainer>
+      <View style={{ flex: 1, backgroundColor: '#021226' }}>
+        <NavigationContainer theme={NAV_THEME}>
           <Stack.Navigator
             initialRouteName="Splash"
             screenOptions={{
               headerShown: false,
-              animation: 'slide_from_right',
+              // Keep default transitions soft to avoid hard "jump" feel.
+              animation: 'fade',
+              animationDuration: 360,
+              gestureEnabled: true,
+              fullScreenGestureEnabled: true,
+              animationMatchesGesture: true,
               contentStyle: { flex: 1, backgroundColor: '#021226' },
             }}
           >
@@ -36,17 +49,37 @@ export default function AppNavigator() {
           <Stack.Screen
             name="Splash"
             component={SplashScreen}
-            options={{ animation: 'fade' }}
+            options={{ animation: 'fade', animationDuration: 360 }}
           />
-          <Stack.Screen name="Welcome" component={WelcomeScreen} />
-          <Stack.Screen name="LocationPermission" component={LocationPermissionScreen} />
-          <Stack.Screen name="NotificationPermission" component={NotificationPermissionScreen} />
+          <Stack.Screen
+            name="Welcome"
+            component={WelcomeScreen}
+            options={{
+              animation: 'fade',
+              animationDuration: 360,
+              animationTypeForReplace: 'push',
+            }}
+          />
+          <Stack.Screen
+            name="LocationPermission"
+            component={LocationPermissionScreen}
+            options={{ animation: 'fade', animationDuration: 380 }}
+          />
+          <Stack.Screen
+            name="NotificationPermission"
+            component={NotificationPermissionScreen}
+            options={{ animation: 'fade', animationDuration: 380 }}
+          />
 
           {/* Main app: one stack entry so the bottom tab bar stays fixed while switching tabs */}
           <Stack.Screen
             name="MainTabs"
             component={MainTabNavigator}
-            options={{ animation: 'fade' }}
+            options={{
+              animation: 'fade',
+              animationDuration: 380,
+              animationTypeForReplace: 'push',
+            }}
           />
           <Stack.Screen name="QuranReader" component={QuranReaderScreen} />
           <Stack.Screen name="AdhkarDetail" component={AdhkarDetailScreen} />
@@ -57,7 +90,8 @@ export default function AppNavigator() {
             options={{
               // 'modal' on iOS is often a short page sheet; fullScreenModal fills the phone viewport.
               presentation: 'fullScreenModal',
-              animation: 'slide_from_bottom',
+              animation: 'fade_from_bottom',
+              animationDuration: 320,
             }}
           />
         </Stack.Navigator>

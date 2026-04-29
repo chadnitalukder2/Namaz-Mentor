@@ -7,6 +7,8 @@ import {
   StatusBar,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
+  InteractionManager,
 } from 'react-native';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
 import { MORNING_ADHKAR } from '../constants/data';
@@ -14,6 +16,15 @@ import { MORNING_ADHKAR } from '../constants/data';
 export default function AdhkarDetailScreen({ navigation, route }) {
   const category = route?.params?.category || { name: 'Morning Adhkar', count: 15 };
   const [counts, setCounts] = useState({});
+  const [isReady, setIsReady] = useState(false);
+
+  React.useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      setIsReady(true);
+    });
+
+    return () => task.cancel();
+  }, []);
 
   const increment = (id, target) => {
     setCounts((prev) => {
@@ -40,51 +51,57 @@ export default function AdhkarDetailScreen({ navigation, route }) {
 
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          {MORNING_ADHKAR.map((dhikr) => {
-            const currentCount = counts[dhikr.id] || 0;
-            const isDone = currentCount >= dhikr.target;
+        {isReady ? (
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            {MORNING_ADHKAR.map((dhikr) => {
+              const currentCount = counts[dhikr.id] || 0;
+              const isDone = currentCount >= dhikr.target;
 
-            return (
-              <View key={dhikr.id} style={[styles.dhikrCard, isDone && styles.dhikrCardDone]}>
-                {/* Title & Reference */}
-                <View style={styles.dhikrHeader}>
-                  <Text style={styles.dhikrTitle}>{dhikr.title}</Text>
-                  {dhikr.reference ? (
-                    <Text style={styles.dhikrRef}>{dhikr.reference}</Text>
-                  ) : null}
+              return (
+                <View key={dhikr.id} style={[styles.dhikrCard, isDone && styles.dhikrCardDone]}>
+                  {/* Title & Reference */}
+                  <View style={styles.dhikrHeader}>
+                    <Text style={styles.dhikrTitle}>{dhikr.title}</Text>
+                    {dhikr.reference ? (
+                      <Text style={styles.dhikrRef}>{dhikr.reference}</Text>
+                    ) : null}
+                  </View>
+
+                  {/* Arabic */}
+                  <Text style={styles.arabicText}>{dhikr.arabic}</Text>
+
+                  {/* Transliteration */}
+                  {dhikr.transliteration && (
+                    <Text style={styles.transliterationText}>{dhikr.transliteration}</Text>
+                  )}
+
+                  {/* Translation */}
+                  <Text style={styles.translationText}>{dhikr.translation}</Text>
+
+                  {/* Divider */}
+                  <View style={styles.divider} />
+
+                  {/* Counter */}
+                  <TouchableOpacity
+                    style={styles.countRow}
+                    onPress={() => increment(dhikr.id, dhikr.target)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.countIcon}>📿</Text>
+                    <Text style={[styles.countText, isDone && styles.countTextDone]}>
+                      {currentCount} / {dhikr.target}
+                    </Text>
+                    {isDone && <Text style={styles.doneIcon}>✓</Text>}
+                  </TouchableOpacity>
                 </View>
-
-                {/* Arabic */}
-                <Text style={styles.arabicText}>{dhikr.arabic}</Text>
-
-                {/* Transliteration */}
-                {dhikr.transliteration && (
-                  <Text style={styles.transliterationText}>{dhikr.transliteration}</Text>
-                )}
-
-                {/* Translation */}
-                <Text style={styles.translationText}>{dhikr.translation}</Text>
-
-                {/* Divider */}
-                <View style={styles.divider} />
-
-                {/* Counter */}
-                <TouchableOpacity
-                  style={styles.countRow}
-                  onPress={() => increment(dhikr.id, dhikr.target)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.countIcon}>📿</Text>
-                  <Text style={[styles.countText, isDone && styles.countTextDone]}>
-                    {currentCount} / {dhikr.target}
-                  </Text>
-                  {isDone && <Text style={styles.doneIcon}>✓</Text>}
-                </TouchableOpacity>
-              </View>
-            );
-          })}
-        </ScrollView>
+              );
+            })}
+          </ScrollView>
+        ) : (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator size="small" color={Colors.gold} />
+          </View>
+        )}
       </SafeAreaView>
     </View>
   );
@@ -137,6 +154,11 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
     paddingBottom: 32,
+  },
+  loadingWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   dhikrCard: {
