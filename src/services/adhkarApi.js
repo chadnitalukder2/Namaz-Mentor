@@ -12,8 +12,15 @@ const MUSLIM_KIT_BY_CATEGORY_ID = {
 const RN0X_ADHKAR_JSON =
   'https://raw.githubusercontent.com/rn0x/Adhkar-json/main/adhkar.json';
 
+/** Seen-Arabic DB — English translation + transliteration for morning/evening. */
+const SEEN_ARABIC_EN_URL =
+  'https://raw.githubusercontent.com/Seen-Arabic/Morning-And-Evening-Adhkar-DB/main/en.json';
+
 /** @type {any[] | null} */
 let rn0xAdhkarCache = null;
+
+/** @type {any[] | null} */
+let seenArabicEnCache = null;
 
 async function fetchWithTimeout(url, options = {}) {
   const controller = new AbortController();
@@ -65,6 +72,13 @@ function looksLikeTransliterationLine(s) {
   return letters.length >= s.length * 0.25;
 }
 
+/** Heuristic: Latin letters dominate → treat as English (e.g. muslimKit `bless` sometimes English). */
+function looksMostlyEnglish(s) {
+  if (!s || s.length < 12) return false;
+  const letters = s.replace(/[^a-zA-Z]/g, '');
+  return letters.length >= s.length * 0.28;
+}
+
 /**
  * @param {object} row Hisn Muslim JSON row
  * @param {number} index fallback index
@@ -99,15 +113,19 @@ export function normalizeHisnRow(row, index) {
  */
 function normalizeMuslimKitRow(row, index) {
   const arabic = String(row?.zekr ?? '').trim();
-  const reference = String(row?.bless ?? '').trim();
+  const bless = String(row?.bless ?? '').trim();
   const target = Math.max(1, Math.min(1000, Number(row?.repeat) || 1));
+  const reference = bless && !looksMostlyEnglish(bless) ? bless : '';
+  const translation = looksMostlyEnglish(bless)
+    ? bless
+    : 'English meaning is not included in this offline bundle. Use the Arabic text above, or go online to load full English from Hisn al-Muslim.';
   return {
     id: index + 1,
     title: `Dhikr ${index + 1}`,
     reference,
     arabic,
     transliteration: '',
-    translation: reference || 'Recite this dhikr with attention and sincerity.',
+    translation,
     target,
   };
 }
@@ -154,8 +172,80 @@ function normalizeRn0xRow(row, index) {
     reference: '',
     arabic,
     transliteration: '',
-    translation: 'Recite as in Hisn al-Muslim; follow the repetition count shown.',
+    translation:
+      'This backup source lists Arabic only (Hisn al-Muslim). English meaning appears when the main Hisn English feed loads successfully.',
     target,
+  };
+}
+
+async function getSeenArabicEnArray() {
+  if (seenArabicEnCache) return seenArabicEnCache;
+  const res = await fetchWithTimeout(SEEN_ARABIC_EN_URL, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!res.ok) {
+    throw new Error(res.statusText || `HTTP ${res.status}`);
+  }
+  const json = await res.json();
+  if (!Array.isArray(json)) {
+    throw new Error('Invalid Seen-Arabic en.json');
+  }
+  seenArabicEnCache = json;
+  return seenArabicEnCache;
+}
+
+/**
+ * @param {object} row Seen-Arabic en.json row
+ * @param {number} index
+ */
+function normalizeSeenArabicRow(row, index) {
+  const id = Number(row?.order) || index + 1;
+  const arabic = String(row?.content ?? '').trim();
+  const translation = String(row?.translation ?? '').trim();
+  const transliteration = String(row?.transliteration ?? '').trim();
+  const source = String(row?.source ?? '').trim();
+  const fadl = String(row?.fadl ?? '').trim();
+  const target = Math.max(1, Math.min(1000, Number(row?.count) || 1));
+
+  let translationBody = translation;
+  if (fadl && translation && !translation.includes(fadl.slice(0, Math.min(30, fadl.length)))) {
+    translationBody = `${translation}\n\n${fadl}`;
+  } else if (fadl && !translation) {
+    translationBody = fadl;
+  }
+
+  const title = source || (translation ? `${translation.slice(0, 72)}${translation.length > 72 ? '…' : ''}` : `Dhikr ${id}`);
+
+  return {
+    id,
+    title,
+    reference: source,
+    arabic,
+    transliteration,
+    translation: translationBody,
+    target,
+  };
+}
+
+/**
+ * Morning / evening English rows (`type`: 0 = both, 1 = morning, 2 = evening).
+ * @param {'morning' | 'evening'} categoryId
+ */
+async function fetchSeenArabicMorningEvening(categoryId) {
+  const data = await getSeenArabicEnArray();
+  const filtered = data.filter((row) => {
+    const t = Number(row?.type);
+    if (categoryId === 'morning') return t === 0 || t === 1;
+    if (categoryId === 'evening') return t === 0 || t === 2;
+    return false;
+  });
+  filtered.sort((a, b) => Number(a.order) - Number(b.order));
+  if (!filtered.length) {
+    throw new Error('Seen-Arabic filter returned no rows');
+  }
+  return {
+    chapterTitle: categoryId === 'morning' ? 'Morning adhkar' : 'Evening adhkar',
+    items: filtered.map((row, idx) => normalizeSeenArabicRow(row, idx)),
   };
 }
 
@@ -260,6 +350,14 @@ export async function fetchAdhkarByCategory(category) {
       return await fetchHisnEnglishChapter(chapterId);
     } catch {
       // Try category-specific fallback below.
+    }
+  }
+
+  if (categoryId === 'morning' || categoryId === 'evening') {
+    try {
+      return await fetchSeenArabicMorningEvening(categoryId);
+    } catch {
+      // muslimKit last resort (Arabic-only virtue text).
     }
   }
 
