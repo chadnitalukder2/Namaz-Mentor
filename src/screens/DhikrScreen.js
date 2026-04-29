@@ -584,7 +584,6 @@ const styles = StyleSheet.create({
     minHeight: 0,
   },
   libraryScrollContent: {
-    paddingBottom: Spacing.xxl,
     flexGrow: 1,
   },
   heroHeader: {
@@ -651,6 +650,7 @@ const styles = StyleSheet.create({
   libraryList: {
     gap: 12,
     paddingBottom: Spacing.md,
+    borderRadius: '14px',
   },
   libraryListCompact: {
     gap: Spacing.sm + 2,
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(6, 24, 47, 1)',
-    borderRadius: '18px',
+    borderRadius: Radius.md,
     padding: Spacing.md,
     gap: Spacing.md,
   },
@@ -682,8 +682,8 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
   },
   libraryIconPlain: {
-    width: 52,
-    height: 52,
+    width: 30,
+    height: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },
