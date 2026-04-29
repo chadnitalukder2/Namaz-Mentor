@@ -17,6 +17,7 @@ const ROUTE_TO_TAB_ID = {
   Qibla: 'qibla',
   Dhikr: 'dhikr',
 };
+const TAB_BAR_BASE_HEIGHT = 69;
 
 function MainTabBarContainer({ state, navigation }) {
   const insets = useSafeAreaInsets();
@@ -25,7 +26,15 @@ function MainTabBarContainer({ state, navigation }) {
   const paddingBottom = Math.max(insets.bottom, Spacing.sm);
 
   return (
-    <View style={[styles.tabBarWrap, { paddingBottom }]}>
+    <View
+      style={[
+        styles.tabBarWrap,
+        {
+          paddingBottom,
+          minHeight: TAB_BAR_BASE_HEIGHT + paddingBottom,
+        },
+      ]}
+    >
       <MainTabBar activeTab={activeTab} navigation={navigation} />
     </View>
   );

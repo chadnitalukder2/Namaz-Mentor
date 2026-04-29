@@ -2,7 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 
 // Screens
 import SplashScreen from '../screens/SplashScreen';
@@ -29,7 +29,7 @@ const NAV_THEME = {
 
 export default function AppNavigator() {
   return (
-    <SafeAreaProvider style={{ flex: 1 }}>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics} style={{ flex: 1 }}>
       <View style={{ flex: 1, backgroundColor: '#021226' }}>
         <NavigationContainer theme={NAV_THEME}>
           <Stack.Navigator

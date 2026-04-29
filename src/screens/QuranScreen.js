@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   useWindowDimensions,
+  InteractionManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -20,13 +21,14 @@ import { JUZ_FIRST_SURAH_NUMBER } from '../constants/quranJuz';
 import { fetchAllSurahs, fetchJuzReferences } from '../services/quranApi';
 import { getQuranProgress } from '../utils/quranProgress';
 import { TabQuranIcon } from '../components/MainTabIcons';
+import ScreenTransitionView from '../components/ScreenTransitionView';
 
 export default function QuranScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('surah');
   const [search, setSearch] = useState('');
-  const [surahs, setSurahs] = useState([]);
+  const [surahs, setSurahs] = useState(FALLBACK_SURAHS);
   const [juzRefs, setJuzRefs] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [progress, setProgress] = useState(null);
@@ -34,7 +36,8 @@ export default function QuranScreen({ navigation }) {
   const isCompact = width < 380;
   const isSmall = width < 340;
 
-  const loadSurahs = useCallback(async () => {
+  const loadSurahs = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const [list, juzList] = await Promise.all([
@@ -54,7 +57,10 @@ export default function QuranScreen({ navigation }) {
   }, []);
 
   useEffect(() => {
-    loadSurahs();
+    const task = InteractionManager.runAfterInteractions(() => {
+      loadSurahs({ silent: true });
+    });
+    return () => task.cancel();
   }, [loadSurahs]);
 
   const reloadProgress = useCallback(async () => {
@@ -70,17 +76,19 @@ export default function QuranScreen({ navigation }) {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    loadSurahs();
+    loadSurahs({ silent: true });
   }, [loadSurahs]);
+
+  const surahById = useMemo(() => new Map(surahs.map((s) => [s.id, s])), [surahs]);
 
   const continueMeta = useMemo(() => {
     if (!progress || surahs.length === 0) return null;
-    const surah = surahs.find((s) => s.id === progress.surahNumber);
+    const surah = surahById.get(progress.surahNumber);
     if (!surah) return null;
     const ayah = Math.min(Math.max(1, progress.ayahNumber), surah.ayahs);
     const pct = surah.ayahs > 0 ? (ayah / surah.ayahs) * 100 : 0;
     return { surah, ayah, pct };
-  }, [progress, surahs]);
+  }, [progress, surahById]);
 
   const filteredSurahs = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -103,7 +111,7 @@ export default function QuranScreen({ navigation }) {
         startAyah: 1,
       }));
     return base.map((ref) => {
-      const startSurah = surahs.find((s) => s.id === ref.startSurahId);
+      const startSurah = surahById.get(ref.startSurahId);
       const ayahPart = ref.startAyah > 1 ? ` · Ayah ${ref.startAyah}` : '';
       const subtitle = startSurah
         ? `Starts at ${startSurah.name}${ayahPart}`
@@ -123,10 +131,10 @@ export default function QuranScreen({ navigation }) {
       if (row.startSurah?.translation?.toLowerCase().includes(q)) return true;
       return false;
     });
-  }, [surahs, search, juzRefs]);
+  }, [surahById, search, juzRefs]);
 
   return (
-    <View style={styles.container}>
+    <ScreenTransitionView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.backgroundDark} />
 
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -172,12 +180,20 @@ export default function QuranScreen({ navigation }) {
         ) : null} */}
 
         {/* Search Bar */}
-        <View style={[styles.searchBar, isCompact && styles.searchBarCompact]}>
+        <View
+          style={[
+            styles.searchBar,
+            isCompact && styles.searchBarCompact,
+          ]}
+        >
           <Ionicons name="search" size={18} color={Colors.textMuted} />
           <TextInput
             placeholder="Search Surah..."
             placeholderTextColor={Colors.textMuted}
-            style={[styles.searchInput, isCompact && styles.searchInputCompact]}
+              style={[
+                styles.searchInput,
+                isCompact && styles.searchInputCompact,
+              ]}
             value={search}
             onChangeText={setSearch}
             autoCorrect={false}
@@ -258,7 +274,10 @@ export default function QuranScreen({ navigation }) {
             <ScrollView
               style={styles.listScroll}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={[styles.surahList, isCompact && styles.surahListCompact]}
+              contentContainerStyle={[
+                styles.surahList,
+                isCompact && styles.surahListCompact,
+              ]}
               refreshControl={
                 <RefreshControl
                   refreshing={refreshing}
@@ -272,7 +291,10 @@ export default function QuranScreen({ navigation }) {
               ? filteredSurahs.map((surah) => (
                   <TouchableOpacity
                     key={surah.id}
-                    style={[styles.surahRow, isCompact && styles.surahRowCompact]}
+                    style={[
+                      styles.surahRow,
+                      isCompact && styles.surahRowCompact,
+                    ]}
                     activeOpacity={0.7}
                     onPress={() =>
                       navigation?.navigate('QuranReader', {
@@ -285,7 +307,12 @@ export default function QuranScreen({ navigation }) {
                       })
                     }
                   >
-                    <View style={[styles.numberBadge, isCompact && styles.numberBadgeCompact]}>
+                    <View
+                      style={[
+                        styles.numberBadge,
+                        isCompact && styles.numberBadgeCompact,
+                      ]}
+                    >
                       <TabQuranIcon size={20} active={false} />
                     </View>
                     <View style={styles.surahInfo}>
@@ -304,7 +331,10 @@ export default function QuranScreen({ navigation }) {
               : juzRows.map((row) => (
                   <TouchableOpacity
                     key={row.juzNum}
-                    style={[styles.surahRow, isCompact && styles.surahRowCompact]}
+                    style={[
+                      styles.surahRow,
+                      isCompact && styles.surahRowCompact,
+                    ]}
                     activeOpacity={0.7}
                     onPress={() => {
                       const s =
@@ -326,7 +356,12 @@ export default function QuranScreen({ navigation }) {
                       });
                     }}
                   >
-                    <View style={[styles.numberBadge, isCompact && styles.numberBadgeCompact]}>
+                    <View
+                      style={[
+                        styles.numberBadge,
+                        isCompact && styles.numberBadgeCompact,
+                      ]}
+                    >
                       <Ionicons name="albums-outline" size={20} color={Colors.textMuted} />
                       {/* <Text style={styles.surahNumber}>{row.juzNum}</Text> */}
                     </View>
@@ -344,9 +379,10 @@ export default function QuranScreen({ navigation }) {
             </ScrollView>
           </View>
         ) : null}
+
       </SafeAreaView>
 
-    </View>
+    </ScreenTransitionView>
   );
 }
 
@@ -550,7 +586,6 @@ const styles = StyleSheet.create({
   surahList: {
     gap: 12,
     paddingBottom: Spacing.md,
-    flexGrow: 1,
   },
   surahListCompact: {
     paddingBottom: Spacing.lg,
