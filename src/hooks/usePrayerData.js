@@ -60,10 +60,10 @@ export function usePrayerTimes() {
               );
               label = parts.length ? parts.join(', ') : place.name || label;
             } else {
-              label = `${lat.toFixed(2)}°, ${lng.toFixed(2)}°`;
+              label = FALLBACK_LOCATION.name;
             }
           } catch {
-            label = `${lat.toFixed(2)}°, ${lng.toFixed(2)}°`;
+            label = FALLBACK_LOCATION.name;
           }
         }
       } catch {
