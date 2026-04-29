@@ -10,13 +10,18 @@ import {
   ActivityIndicator,
   InteractionManager,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path } from 'react-native-svg';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
-import { MORNING_ADHKAR } from '../constants/data';
+import { fetchAdhkarByCategory } from '../services/adhkarApi';
 
 export default function AdhkarDetailScreen({ navigation, route }) {
   const category = route?.params?.category || { name: 'Morning Adhkar', count: 15 };
   const [counts, setCounts] = useState({});
   const [isReady, setIsReady] = useState(false);
+  const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasApiError, setHasApiError] = useState(false);
 
   React.useEffect(() => {
     const task = InteractionManager.runAfterInteractions(() => {
@@ -25,6 +30,34 @@ export default function AdhkarDetailScreen({ navigation, route }) {
 
     return () => task.cancel();
   }, []);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setIsLoading(true);
+      setHasApiError(false);
+      try {
+        const { items: fetchedItems } = await fetchAdhkarByCategory(category);
+        if (!cancelled) {
+          setItems(fetchedItems || []);
+        }
+      } catch {
+        if (!cancelled) {
+          setItems([]);
+          setHasApiError(true);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [category?.id, category?.hisnEnChapterId]);
+
+  const totalCount = isLoading ? category.count : items.length;
 
   const increment = (id, target) => {
     setCounts((prev) => {
@@ -42,18 +75,39 @@ export default function AdhkarDetailScreen({ navigation, route }) {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation?.goBack()} style={styles.backBtn}>
-            <Text style={styles.backIcon}>‹</Text>
+            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M11.9986 18.9974L4.99951 11.9984L11.9986 4.99931"
+                stroke="#F5F7FA"
+                strokeWidth={1.99973}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <Path
+                d="M18.9976 11.9984H4.99951"
+                stroke="#F5F7FA"
+                strokeWidth={1.99973}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.title}>{category.name}</Text>
-            <Text style={styles.subtitle}>{category.count} Adhkar</Text>
+            <Text style={styles.subtitle}>{totalCount} Adhkar</Text>
           </View>
 
         </View>
 
-        {isReady ? (
+        {isReady && !isLoading ? (
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-            {MORNING_ADHKAR.map((dhikr) => {
+            {hasApiError ? (
+              <Text style={styles.fallbackNote}>API load failed on this device. Please check internet and try again.</Text>
+            ) : null}
+            {!hasApiError && items.length === 0 ? (
+              <Text style={styles.fallbackNote}>No adhkar found for this category.</Text>
+            ) : null}
+            {items.map((dhikr) => {
               const currentCount = counts[dhikr.id] || 0;
               const isDone = currentCount >= dhikr.target;
 
@@ -82,17 +136,34 @@ export default function AdhkarDetailScreen({ navigation, route }) {
                   <View style={styles.divider} />
 
                   {/* Counter */}
-                  <TouchableOpacity
-                    style={styles.countRow}
-                    onPress={() => increment(dhikr.id, dhikr.target)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.countIcon}>📿</Text>
-                    <Text style={[styles.countText, isDone && styles.countTextDone]}>
-                      {currentCount} / {dhikr.target}
-                    </Text>
-                    {isDone && <Text style={styles.doneIcon}>✓</Text>}
-                  </TouchableOpacity>
+                  {isDone ? (
+                    <LinearGradient
+                      colors={['rgba(249, 201, 113, 1)', 'rgba(166, 130, 65, 1)']}
+                      start={{ x: 0, y: 0.5 }}
+                      end={{ x: 1, y: 0.5 }}
+                      style={[styles.countRow, styles.countRowDone]}
+                    >
+                      <TouchableOpacity onPress={() => increment(dhikr.id, dhikr.target)} activeOpacity={0.7}>
+                        <View style={styles.countInner}>
+                          <Text style={styles.countPlus}>+</Text>
+                          <Text style={[styles.countText, styles.countTextDone]}>
+                            {currentCount} / {dhikr.target}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    </LinearGradient>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.countRow}
+                      onPress={() => increment(dhikr.id, dhikr.target)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.countPlus}>+</Text>
+                      <Text style={styles.countText}>
+                        {currentCount} / {dhikr.target}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               );
             })}
@@ -112,7 +183,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroundDark,
   },
-  safeArea: { flex: 1 },
+  safeArea: {
+    flex: 1,
+    paddingTop: 20,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -126,12 +200,6 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 32,
-    color: Colors.textWhite,
-    lineHeight: 32,
-    marginTop: -6,
   },
   headerCenter: {
     flex: 1,
@@ -159,6 +227,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  fallbackNote: {
+    ...Fonts.regular,
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginBottom: 4,
   },
 
   dhikrCard: {
@@ -214,19 +288,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 4,
+    marginTop: 2,
+    minHeight: 42,
+    borderRadius: Radius.round,
+    backgroundColor: 'rgba(142, 143, 157, 1)',
   },
-  countIcon: { fontSize: 16 },
+  countRowDone: {
+    backgroundColor: 'transparent',
+  },
+  countInner: {
+    minHeight: 42,
+    paddingHorizontal: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  countPlus: {
+    ...Fonts.bold,
+    fontSize: 21,
+    lineHeight: 23,
+    color: 'rgba(16, 14, 29, 1)',
+  },
   countText: {
-    ...Fonts.medium,
-    fontSize: 16,
-    color: Colors.textMuted,
+    ...Fonts.bold,
+    fontSize: 22,
+    lineHeight: 24,
+    color: 'rgba(16, 14, 29, 1)',
   },
   countTextDone: {
-    color: Colors.gold,
-  },
-  doneIcon: {
-    fontSize: 16,
-    color: Colors.gold,
+    color: 'rgba(16, 14, 29, 1)',
   },
 });

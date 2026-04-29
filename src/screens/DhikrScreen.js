@@ -16,7 +16,7 @@ import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Path, Stop } fr
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors, Fonts, Spacing, Radius } from '../constants/theme';
 import { DHIKR_CATEGORIES } from '../constants/data';
-import { fetchHisnChapterItemCount } from '../services/adhkarApi';
+import { fetchAdhkarByCategory } from '../services/adhkarApi';
 import { TabDhikrIcon } from '../components/MainTabIcons';
 
 const TARGET_PRESETS = [33, 99, 100, 1000];
@@ -438,30 +438,31 @@ export default function DhikrScreen({ navigation }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const chapterIds = [
-        ...new Set(
-          DHIKR_CATEGORIES.map((c) => c.hisnEnChapterId).filter((id) => id != null && Number.isFinite(Number(id)))
-        ),
-      ];
-      const countByChapter = new Map();
+      const next = {};
       await Promise.all(
-        chapterIds.map(async (chapterId) => {
-          const n = await fetchHisnChapterItemCount(chapterId);
-          if (!cancelled && n != null) countByChapter.set(chapterId, n);
+        DHIKR_CATEGORIES.map(async (cat) => {
+          try {
+            const { items } = await fetchAdhkarByCategory(cat);
+            if (!cancelled && Array.isArray(items) && items.length > 0) {
+              next[cat.id] = items.length;
+            }
+          } catch {
+            // Keep fallback static count for this category.
+          }
         })
       );
       if (cancelled) return;
-      const next = {};
-      for (const cat of DHIKR_CATEGORIES) {
-        const n = countByChapter.get(cat.hisnEnChapterId);
-        if (n != null) next[cat.id] = n;
-      }
       setAdhkarCountsByCategoryId(next);
     })();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  const getCategoryCount = (cat) => {
+    const apiCount = adhkarCountsByCategoryId[cat.id];
+    return Number.isFinite(apiCount) ? apiCount : cat.count;
+  };
 
   return (
     <View style={styles.container}>
@@ -500,7 +501,14 @@ export default function DhikrScreen({ navigation }) {
                 key={cat.id}
                 style={[styles.libraryItem, isCompact && styles.libraryItemCompact]}
                 activeOpacity={0.72}
-                onPress={() => navigation?.navigate('AdhkarDetail', { category: cat })}
+                onPress={() =>
+                  navigation?.navigate('AdhkarDetail', {
+                    category: {
+                      ...cat,
+                      count: getCategoryCount(cat),
+                    },
+                  })
+                }
               >
                 {usesPlainLibraryIconSlot(cat.icon) ? (
                   <View style={[styles.libraryIconPlain, isCompact && styles.libraryIconPlainCompact]}>
@@ -521,7 +529,7 @@ export default function DhikrScreen({ navigation }) {
                     {cat.name}
                   </Text>
                   <Text style={styles.libraryCount}>
-                    {adhkarCountsByCategoryId[cat.id] ?? cat.count} Adhkar
+                    {getCategoryCount(cat)} Adhkar
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={'rgba(217, 170, 85, 1)'} />

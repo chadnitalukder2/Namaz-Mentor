@@ -1,4 +1,32 @@
-const HISN_EN_BASE = 'https://www.hisnmuslim.com/api/en';
+const HISN_EN_BASES = ['https://www.hisnmuslim.com/api/en', 'https://hisnmuslim.com/api/en'];
+const FETCH_TIMEOUT_MS = 12000;
+const MUSLIM_KIT_BASE = 'https://ahegazy.github.io/muslimKit/json';
+
+const MUSLIM_KIT_BY_CATEGORY_ID = {
+  morning: 'azkar_sabah.json',
+  evening: 'azkar_massa.json',
+  'after-salah': 'PostPrayer_azkar.json',
+};
+
+/** rn0x/Adhkar-json — full Hisn-style categories; id 2 = أذكار النوم (before sleep). */
+const RN0X_ADHKAR_JSON =
+  'https://raw.githubusercontent.com/rn0x/Adhkar-json/main/adhkar.json';
+
+/** @type {any[] | null} */
+let rn0xAdhkarCache = null;
+
+async function fetchWithTimeout(url, options = {}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 /**
  * Strip simple Markdown-style links: [label](url) -> label
@@ -65,6 +93,105 @@ export function normalizeHisnRow(row, index) {
 }
 
 /**
+ * @param {object} row muslimKit row
+ * @param {number} index fallback index
+ * @returns {{ id: number, title: string, reference: string, arabic: string, transliteration: string, translation: string, target: number }}
+ */
+function normalizeMuslimKitRow(row, index) {
+  const arabic = String(row?.zekr ?? '').trim();
+  const reference = String(row?.bless ?? '').trim();
+  const target = Math.max(1, Math.min(1000, Number(row?.repeat) || 1));
+  return {
+    id: index + 1,
+    title: `Dhikr ${index + 1}`,
+    reference,
+    arabic,
+    transliteration: '',
+    translation: reference || 'Recite this dhikr with attention and sincerity.',
+    target,
+  };
+}
+
+/**
+ * Fallback source (muslimKit) for category-wise adhkar.
+ * @param {string} categoryId
+ * @returns {Promise<{ chapterTitle: string, items: ReturnType<typeof normalizeMuslimKitRow>[] }>}
+ */
+async function fetchMuslimKitCategory(categoryId) {
+  const filename = MUSLIM_KIT_BY_CATEGORY_ID[categoryId];
+  if (!filename) {
+    throw new Error('No fallback source for this category');
+  }
+  const url = `${MUSLIM_KIT_BASE}/${filename}`;
+  const res = await fetchWithTimeout(url, {
+    headers: {
+      Accept: 'application/json',
+    },
+  });
+  if (!res.ok) {
+    throw new Error(res.statusText || `HTTP ${res.status}`);
+  }
+  const json = await res.json();
+  const rawItems = Array.isArray(json?.content) ? json.content : [];
+  return {
+    chapterTitle: String(json?.title ?? '').trim(),
+    items: rawItems.map((row, idx) => normalizeMuslimKitRow(row, idx)),
+  };
+}
+
+/**
+ * @param {object} row rn0x `array` item
+ * @param {number} index
+ * @returns {{ id: number, title: string, reference: string, arabic: string, transliteration: string, translation: string, target: number }}
+ */
+function normalizeRn0xRow(row, index) {
+  const arabic = String(row?.text ?? '').trim();
+  const id = Number(row?.id) || index + 1;
+  const target = Math.max(1, Math.min(1000, Number(row?.count) || 1));
+  return {
+    id,
+    title: `Dhikr ${id}`,
+    reference: '',
+    arabic,
+    transliteration: '',
+    translation: 'Recite as in Hisn al-Muslim; follow the repetition count shown.',
+    target,
+  };
+}
+
+async function getRn0xAdhkarRootArray() {
+  if (rn0xAdhkarCache) return rn0xAdhkarCache;
+  const res = await fetchWithTimeout(RN0X_ADHKAR_JSON, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!res.ok) {
+    throw new Error(res.statusText || `HTTP ${res.status}`);
+  }
+  const json = await res.json();
+  if (!Array.isArray(json)) {
+    throw new Error('Invalid rn0x adhkar payload');
+  }
+  rn0xAdhkarCache = json;
+  return rn0xAdhkarCache;
+}
+
+/**
+ * @param {number} rn0xCategoryId e.g. 2 = sleep adhkar
+ */
+async function fetchRn0xCategoryById(rn0xCategoryId) {
+  const data = await getRn0xAdhkarRootArray();
+  const cat = data.find((x) => Number(x?.id) === rn0xCategoryId);
+  const rawItems = Array.isArray(cat?.array) ? cat.array : [];
+  if (!rawItems.length) {
+    throw new Error('rn0x category empty or missing');
+  }
+  return {
+    chapterTitle: String(cat?.category ?? '').trim(),
+    items: rawItems.map((row, idx) => normalizeRn0xRow(row, idx)),
+  };
+}
+
+/**
  * Parse Hisn Muslim chapter JSON (single top-level key -> array).
  * @param {object} json
  * @returns {{ chapterTitle: string, items: ReturnType<typeof normalizeHisnRow>[] }}
@@ -88,24 +215,59 @@ export function parseHisnChapterJson(json) {
  * @returns {Promise<{ chapterTitle: string, items: ReturnType<typeof normalizeHisnRow>[] }>}
  */
 export async function fetchHisnEnglishChapter(chapterId) {
-  const url = `${HISN_EN_BASE}/${chapterId}.json`;
-  const res = await fetch(url, {
-    headers: {
-      Accept: 'application/json',
-      'User-Agent': 'NamazMentor/1.0 (Hisn al-Muslim reader)',
-    },
-  });
-  const text = await res.text().catch(() => '');
-  if (!res.ok) {
-    throw new Error(res.statusText || `HTTP ${res.status}`);
+  let lastError = null;
+
+  for (const base of HISN_EN_BASES) {
+    const url = `${base}/${chapterId}.json`;
+    try {
+      const res = await fetchWithTimeout(url, {
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+      const text = await res.text().catch(() => '');
+      if (!res.ok) {
+        throw new Error(res.statusText || `HTTP ${res.status}`);
+      }
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error('Invalid JSON from adhkar source');
+      }
+      return parseHisnChapterJson(json);
+    } catch (err) {
+      lastError = err;
+    }
   }
-  let json;
-  try {
-    json = JSON.parse(text);
-  } catch {
-    throw new Error('Invalid JSON from adhkar source');
+
+  throw lastError || new Error('Unable to load adhkar data');
+}
+
+/**
+ * Stable category fetch:
+ * 1) Hisn by chapter
+ * 2) muslimKit fallback for supported categories
+ * @param {{ id?: string, hisnEnChapterId?: number }} category
+ * @returns {Promise<{ chapterTitle: string, items: ReturnType<typeof normalizeHisnRow>[] }>}
+ */
+export async function fetchAdhkarByCategory(category) {
+  const chapterId = Number(category?.hisnEnChapterId);
+  const categoryId = String(category?.id || '');
+
+  if (Number.isFinite(chapterId)) {
+    try {
+      return await fetchHisnEnglishChapter(chapterId);
+    } catch {
+      // Try category-specific fallback below.
+    }
   }
-  return parseHisnChapterJson(json);
+
+  if (categoryId === 'before-sleep') {
+    return await fetchRn0xCategoryById(2);
+  }
+
+  return fetchMuslimKitCategory(categoryId);
 }
 
 /**
