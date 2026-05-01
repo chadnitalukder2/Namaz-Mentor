@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   prayerList: {
     paddingHorizontal: 14,
     gap: 12,
-    justifyContent: 'flex-start',
+    justifyContent: 'end',
     paddingBottom: 20,
   },
   prayerListMobileEnd: {
