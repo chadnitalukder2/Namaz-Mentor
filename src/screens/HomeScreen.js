@@ -43,6 +43,7 @@ export default function HomeScreen({ navigation }) {
   const { prayers, nextPrayer, nextPrayerAt, locationLabel, loading } = usePrayerTimes();
   const { width, height } = useWindowDimensions();
   const isCompact = width < 360;
+  const isMobileLayout = Platform.OS !== 'web';
   /** Short phones (e.g. SE): keep hero from eating the scrollable sheet. */
   const isShortScreen = height < 700;
   const locationMaxWidth = Math.max(80, width - 200);
@@ -215,7 +216,11 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.sheet}>
         <ScrollView
           style={styles.prayerListScroll}
-          contentContainerStyle={[styles.prayerList, styles.prayerListContent]}
+          contentContainerStyle={[
+            styles.prayerList,
+            styles.prayerListContent,
+            isMobileLayout && styles.prayerListMobileEnd,
+          ]}
           showsVerticalScrollIndicator={false}
         >
           {prayers.map((prayer) => (
@@ -408,12 +413,16 @@ const styles = StyleSheet.create({
   },
   prayerListScroll: {
     flex: 1,
+    // justifyContent: 'end',
   },
   prayerList: {
     paddingHorizontal: 14,
     gap: 12,
-    justifyContent: 'end',
+    justifyContent: 'flex-start',
     paddingBottom: 20,
+  },
+  prayerListMobileEnd: {
+    justifyContent: 'flex-end',
   },
   prayerListContent: {
     flexGrow: 1,
