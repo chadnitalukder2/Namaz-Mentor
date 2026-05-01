@@ -11,6 +11,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Colors, Fonts, Spacing } from '../constants/theme';
 import { PrimaryButton, GhostButton, DotIndicator } from '../components/UIComponents';
 import LocationPinIllustration from '../components/LocationPinIllustration';
+import { setOnboardingCompleted } from '../services/onboardingStorage';
 
 const H_PADDING = 20;
 
@@ -47,15 +48,21 @@ export default function LocationPermissionScreen({ navigation }) {
       <View style={[styles.bottomSection, { paddingBottom: bottomPad }]}>
         <PrimaryButton
           title="Allow Location"
-          onPress={() => navigation?.navigate('NotificationPermission')}
+          onPress={async () => {
+            await setOnboardingCompleted();
+            navigation?.replace('MainTabs', { screen: 'Home' });
+          }}
         />
 
         <GhostButton
           title="Enter Location Manually"
-          onPress={() => navigation?.navigate('NotificationPermission')}
+          onPress={async () => {
+            await setOnboardingCompleted();
+            navigation?.replace('MainTabs', { screen: 'Home' });
+          }}
         />
 
-        <DotIndicator total={3} active={1} />
+        <DotIndicator total={3} active={2} />
       </View>
     </SafeAreaView>
   );

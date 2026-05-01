@@ -11,6 +11,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Colors, Fonts, Spacing } from '../constants/theme';
 import { PrimaryButton, GhostButton, DotIndicator } from '../components/UIComponents';
 import WelcomeIllustration from '../components/WelcomeIllustration';
+import { setOnboardingCompleted } from '../services/onboardingStorage';
 
 const H_PADDING = 20;
 const ILLUSTRATION_ASPECT = 64 / 350;
@@ -63,12 +64,15 @@ export default function WelcomeScreen({ navigation }) {
       <View style={[styles.bottomSection, { paddingBottom: bottomPad }]}>
         <PrimaryButton
           title="Get Started"
-          onPress={() => navigation?.navigate('LocationPermission')}
+          onPress={() => navigation?.navigate('NotificationPermission')}
         />
 
         <GhostButton
           title="Already set up?"
-          onPress={() => navigation?.replace('MainTabs', { screen: 'Home' })}
+          onPress={async () => {
+            await setOnboardingCompleted();
+            navigation?.replace('MainTabs', { screen: 'Home' });
+          }}
           style={styles.ghostBtn}
         />
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
@@ -16,6 +16,7 @@ import QuranReaderScreen from '../screens/QuranReaderScreen';
 import AdhkarDetailScreen from '../screens/AdhkarDetailScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
+import { getHasCompletedOnboarding } from '../services/onboardingStorage';
 
 const Stack = createNativeStackNavigator();
 const NAV_THEME = {
@@ -28,12 +29,49 @@ const NAV_THEME = {
 };
 
 export default function AppNavigator() {
+  const [navReady, setNavReady] = useState(false);
+  const [initialRouteName, setInitialRouteName] = useState('Splash');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const done = await getHasCompletedOnboarding();
+        if (!cancelled) {
+          setInitialRouteName(done ? 'MainTabs' : 'Splash');
+        }
+      } finally {
+        if (!cancelled) setNavReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!navReady) {
+    return (
+      <SafeAreaProvider initialMetrics={initialWindowMetrics} style={{ flex: 1 }}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: '#021226',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <ActivityIndicator color="#E8DCC8" />
+        </View>
+      </SafeAreaProvider>
+    );
+  }
+
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics} style={{ flex: 1 }}>
       <View style={{ flex: 1, backgroundColor: '#021226' }}>
-        <NavigationContainer theme={NAV_THEME}>
+        <NavigationContainer theme={NAV_THEME} key={initialRouteName}>
           <Stack.Navigator
-            initialRouteName="Splash"
+            initialRouteName={initialRouteName}
             screenOptions={{
               headerShown: false,
               // Keep default transitions soft to avoid hard "jump" feel.
