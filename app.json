@@ -3,6 +3,7 @@
     "name": "Namaz Mentor",
     "slug": "namaz-mentor",
     "version": "1.0.0",
+    "icon": "./assets/img/icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "splash": {
@@ -16,8 +17,12 @@
         "NSUserNotificationsUsageDescription": "Namaz Mentor uses notifications to remind you when each prayer begins."
       }
     },
+    "web": {
+      "favicon": "./public/favicon.svg"
+    },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/img/icon.png",
         "backgroundColor": "#021226"
       },
       "package": "com.namazmentor.app",
