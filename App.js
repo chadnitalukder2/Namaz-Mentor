@@ -1,5 +1,9 @@
+import { useEffect } from 'react';
 import { View } from 'react-native';
-import { configurePrayerNotificationHandler } from './src/services/prayerNotifications';
+import {
+  configurePrayerNotificationHandler,
+  registerForegroundAdhanPlayback,
+} from './src/services/prayerNotifications';
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -12,6 +16,11 @@ import AppNavigator from './src/navigation/AppNavigator';
 configurePrayerNotificationHandler();
 
 export default function App() {
+  useEffect(() => {
+    const cleanup = registerForegroundAdhanPlayback();
+    return cleanup;
+  }, []);
+
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,

@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import { Audio } from 'expo-av';
 import { PRAYER_DEFINITIONS } from '../constants/data';
 import { timingToLocalDate } from '../utils/prayerTimes';
 
@@ -9,9 +10,13 @@ const IOS_ADHAN_SOUND = 'adhan.wav';
 
 const SETTINGS_KEY = '@namaz_mentor_prayer_notify_settings_v1';
 const TIMINGS_CACHE_KEY = '@namaz_mentor_prayer_timings_cache_v1';
+const ADHAN_SOUND_FILE = require('../../assets/sounds/adhan.wav');
 
 export const ANDROID_CHANNEL_ADHAN = 'prayer-adhan';
 export const ANDROID_CHANNEL_SILENT = 'prayer-silent';
+
+let foregroundAdhanSound = null;
+let lastForegroundAdhanPlayedAt = 0;
 
 function buildDefaultSettingsMap() {
   return Object.fromEntries(
@@ -56,6 +61,51 @@ export function configurePrayerNotificationHandler() {
       };
     },
   });
+}
+
+async function playForegroundAdhanSound() {
+  const now = Date.now();
+  // Avoid duplicate playback when the same notification event is delivered rapidly.
+  if (now - lastForegroundAdhanPlayedAt < 1500) return;
+  lastForegroundAdhanPlayedAt = now;
+
+  try {
+    if (foregroundAdhanSound) {
+      await foregroundAdhanSound.stopAsync().catch(() => {});
+      await foregroundAdhanSound.unloadAsync().catch(() => {});
+      foregroundAdhanSound = null;
+    }
+    const { sound } = await Audio.Sound.createAsync(ADHAN_SOUND_FILE, {
+      shouldPlay: true,
+    });
+    foregroundAdhanSound = sound;
+    sound.setOnPlaybackStatusUpdate((status) => {
+      if (status?.isLoaded && status.didJustFinish) {
+        sound.unloadAsync().catch(() => {});
+        if (foregroundAdhanSound === sound) foregroundAdhanSound = null;
+      }
+    });
+  } catch {
+    // Keep silent on failures; scheduled notification sound is still available.
+  }
+}
+
+export function registerForegroundAdhanPlayback() {
+  if (Platform.OS === 'web') return () => {};
+  const subscription = Notifications.addNotificationReceivedListener((notification) => {
+    const mode = notification.request.content.data?.soundMode;
+    if (mode === 'silent') return;
+    playForegroundAdhanSound().catch(() => {});
+  });
+
+  return () => {
+    subscription.remove();
+    if (foregroundAdhanSound) {
+      foregroundAdhanSound.stopAsync().catch(() => {});
+      foregroundAdhanSound.unloadAsync().catch(() => {});
+      foregroundAdhanSound = null;
+    }
+  };
 }
 
 export async function ensureAndroidChannels() {
