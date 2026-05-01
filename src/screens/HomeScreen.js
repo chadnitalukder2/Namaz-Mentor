@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     gap: 12,
     justifyContent: 'end',
-    paddingBottom: 28,
+    paddingBottom: 20,
   },
   prayerListContent: {
     flexGrow: 1,
@@ -451,7 +451,7 @@ function PrayerRow({ prayer, isNext, isSelected, adhanSoundOn }) {
       <View style={stylesRow.right}>
         <Text style={[stylesRow.time, isNext && stylesRow.timeNext]}>{prayer.time}</Text>
         {prayer.completed ? (
-          <PrayerCompletedBadgeIcon size={20} />
+          <PrayerCompletedBadgeIcon size={18} />
         ) : adhanSoundOn ? (
           <MaterialCommunityIcons name="volume-high" size={20} color={Colors.gold} />
         ) : (
