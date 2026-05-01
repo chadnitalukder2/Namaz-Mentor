@@ -23,6 +23,7 @@ import AsrPrayerIcon from '../components/AsrPrayerIcon';
 import MaghribPrayerIcon from '../components/MaghribPrayerIcon';
 import IshaPrayerIcon from '../components/IshaPrayerIcon';
 import NotificationBellRowIcon from '../components/NotificationBellRowIcon';
+import PrayerCompletedBadgeIcon from '../components/PrayerCompletedBadgeIcon';
 import { timingToLocalDate } from '../utils/prayerTimes';
 import {
   reschedulePrayerNotifications,
@@ -411,8 +412,8 @@ const styles = StyleSheet.create({
   prayerList: {
     paddingHorizontal: 14,
     gap: 12,
-    justifyContent: 'center',
-    paddingBottom: Spacing.sm,
+    justifyContent: 'end',
+    paddingBottom: 28,
   },
   prayerListContent: {
     flexGrow: 1,
@@ -450,11 +451,7 @@ function PrayerRow({ prayer, isNext, isSelected, adhanSoundOn }) {
       <View style={stylesRow.right}>
         <Text style={[stylesRow.time, isNext && stylesRow.timeNext]}>{prayer.time}</Text>
         {prayer.completed ? (
-          <MaterialCommunityIcons
-            name="check-decagram-outline"
-            size={20}
-            color="#00E58A"
-          />
+          <PrayerCompletedBadgeIcon size={20} />
         ) : adhanSoundOn ? (
           <MaterialCommunityIcons name="volume-high" size={20} color={Colors.gold} />
         ) : (
@@ -521,7 +518,7 @@ const stylesRow = StyleSheet.create({
   },
   name: {
     ...Fonts.medium,
-    color: '#A2B1C4',
+    color: 'rgba(151, 151, 151, 1)',
     fontSize: 18,
   },
   nameNext: {
@@ -534,8 +531,8 @@ const stylesRow = StyleSheet.create({
   },
   time: {
     ...Fonts.medium,
-    color: '#E3EDF9',
-    fontSize: 18,
+    color: 'rgba(211, 215, 220, 1)',
+    fontSize: 14,
   },
   timeNext: {
     color: Colors.textWhite,
