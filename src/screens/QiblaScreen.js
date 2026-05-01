@@ -410,8 +410,8 @@ const styles = StyleSheet.create({
   centerStack: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: Spacing.xxxl,
+    justifyContent: 'center',
+    marginBottom: 75,
   },
   centerStackShort: {
     justifyContent: 'flex-start',
