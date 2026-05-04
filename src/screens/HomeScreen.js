@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   useWindowDimensions,
   Platform,
-  ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -31,8 +30,6 @@ import {
   loadPrayerNotificationSettings,
   isPrayerAdhanSoundOn,
 } from '../services/prayerNotifications';
-
-const BG_IMAGE = require('../../assets/img/bg2.png');
 
 const PRAYER_SVG_ICONS = {
   fajr: FajrPrayerIcon,
@@ -132,14 +129,6 @@ export default function HomeScreen({ navigation }) {
   return (
     <View style={styles.root}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-
-      {/* Full-screen bg — wave is in the middle of this image so it
-          naturally divides the hero (top) from the prayer list (bottom) */}
-      <ImageBackground
-        source={BG_IMAGE}
-        style={StyleSheet.absoluteFill}
-        resizeMode="cover"
-      />
 
       {/* ── TOP hero area ── */}
       <SafeAreaView
