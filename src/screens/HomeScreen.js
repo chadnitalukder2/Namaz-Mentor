@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   useWindowDimensions,
   Platform,
+  ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -31,6 +32,8 @@ import {
   isPrayerAdhanSoundOn,
 } from '../services/prayerNotifications';
 
+const BG_IMAGE = require('../../assets/img/bg2.png');
+
 const PRAYER_SVG_ICONS = {
   fajr: FajrPrayerIcon,
   dhuhr: DhuhrPrayerIcon,
@@ -44,7 +47,6 @@ export default function HomeScreen({ navigation }) {
   const { width, height } = useWindowDimensions();
   const isCompact = width < 360;
   const isMobileLayout = Platform.OS !== 'web';
-  /** Short phones (e.g. SE): keep hero from eating the scrollable sheet. */
   const isShortScreen = height < 700;
   const locationMaxWidth = Math.max(80, width - 200);
   const [selectedPrayerId, setSelectedPrayerId] = useState(null);
@@ -116,7 +118,6 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     if (Platform.OS === 'web' || loading || !timingsSignature) return;
     reschedulePrayerNotifications(prayers).catch(() => {});
-    // timingsSignature fingerprints raw timings; avoid `prayers` ref (updates every second from hook).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, timingsSignature]);
 
@@ -130,11 +131,17 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.root}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor={Colors.backgroundBlue}
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+
+      {/* Full-screen bg — wave is in the middle of this image so it
+          naturally divides the hero (top) from the prayer list (bottom) */}
+      <ImageBackground
+        source={BG_IMAGE}
+        style={StyleSheet.absoluteFill}
+        resizeMode="cover"
       />
 
+      {/* ── TOP hero area ── */}
       <SafeAreaView
         edges={['top', 'left', 'right']}
         style={[styles.safeTop, isCompact && styles.safeTopCompact]}
@@ -206,13 +213,9 @@ export default function HomeScreen({ navigation }) {
             </View>
           </View>
         </View>
-
-        {/*<View style={styles.waveWrap}>
-          <View style={styles.waveBack} />
-          <View style={styles.waveFront} />
-        </View> */}
       </SafeAreaView>
 
+      {/* ── BOTTOM prayer list — transparent so bg image shows through ── */}
       <View style={styles.sheet}>
         <ScrollView
           style={styles.prayerListScroll}
@@ -243,10 +246,10 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.backgroundDark,
+    backgroundColor: '#021226',
   },
   safeTop: {
-    backgroundColor: 'rgba(2, 18, 38, 1)',
+    backgroundColor: 'transparent',
     paddingHorizontal: Spacing.md,
     paddingBottom: 0,
   },
@@ -260,7 +263,6 @@ const styles = StyleSheet.create({
     gap: 12,
     backgroundColor: 'transparent',
     paddingTop: 20,
-    // paddingHorizontal: 20,
     paddingBottom: 10,
   },
   headerShort: {
@@ -300,7 +302,6 @@ const styles = StyleSheet.create({
   locationSpinner: {
     marginLeft: 6,
   },
-
   heroRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
     minHeight: 250,
     paddingTop: 12,
     paddingBottom: 8,
-    backgroundColor: 'rgba(2, 18, 38, 1)',
+    backgroundColor: 'transparent',
   },
   heroRowShort: {
     minHeight: 148,
@@ -333,7 +334,6 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
   countdown: {
-    // ...Fonts.,
     fontWeight: '500',
     fontSize: 24,
     lineHeight: 30,
@@ -377,48 +377,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  waveWrap: {
-    height: 70,
-    marginTop: 14,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  // waveBack: {
-  //   position: 'absolute',
-  //   left: -40,
-  //   right: -40,
-  //   height: 120,
-  //   bottom: -68,
-  //   borderTopLeftRadius: 120,
-  //   borderTopRightRadius: 120,
-  //   backgroundColor: '#1B3B59',
-  //   opacity: 0.65,
-  // },
-  // waveFront: {
-  //   position: 'absolute',
-  //   left: -20,
-  //   right: -20,
-  //   height: 110,
-  //   bottom: -78,
-  //   borderTopLeftRadius: 120,
-  //   borderTopRightRadius: 120,
-  //   backgroundColor: '#062149',
-  // },
-
   sheet: {
     flex: 1,
     minHeight: 0,
-    backgroundColor: Colors.backgroundDark,
+    backgroundColor: 'transparent',
     paddingTop: 8,
   },
   prayerListScroll: {
     flex: 1,
-    // justifyContent: 'end',
   },
   prayerList: {
     paddingHorizontal: 14,
     gap: 12,
-    justifyContent: 'end',
     paddingBottom: 20,
   },
   prayerListMobileEnd: {
@@ -426,6 +396,7 @@ const styles = StyleSheet.create({
   },
   prayerListContent: {
     flexGrow: 1,
+    justifyContent: 'end',
   },
 });
 
@@ -477,11 +448,9 @@ function formatHeroCountdown(targetDate) {
   const totalMinutes = Math.floor(diff / 60000);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-
   if (hours > 0) {
     return `${hours} hour${hours > 1 ? 's' : ''} ${minutes}min`;
   }
-
   return `${Math.max(1, minutes)}min`;
 }
 
@@ -494,7 +463,7 @@ function buildPrayerTargetDate(prayer) {
 
 const stylesRow = StyleSheet.create({
   card: {
-    backgroundColor: '#051F3F',
+    backgroundColor: 'rgba(5, 31, 63, 0.85)',
     borderRadius: 14,
     minHeight: 66,
     paddingHorizontal: 14,
