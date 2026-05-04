@@ -21,7 +21,7 @@ export default function MainTabBar({ navigation, activeTab }) {
     { id: 'home', label: 'Home', screen: 'Home' },
     { id: 'quran', label: 'Quran', screen: 'Quran' },
     { id: 'qibla', label: 'Qibla', screen: 'Qibla' },
-    { id: 'dhikr', label: 'Dhikr', screen: 'Dhikr' },
+    { id: 'dhikr', label: 'Tasbih', screen: 'Dhikr' },
   ];
 
   return (

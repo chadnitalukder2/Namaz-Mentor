@@ -24,26 +24,26 @@ export function TabHomeIcon({ size = 24, active = false }) {
   if (active) {
     const gradId = `home-tab-active-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
     const pathRoof =
-      'M11.818 2.57567L19.697 8.79585C19.9936 9.03004 20.1667 9.38713 20.1667 9.76507C20.1667 ' +
-      '10.4472 19.6138 11 18.9317 11H18.3333V14.2083C18.3333 16.801 18.3333 18.0974 17.5279 ' +
-      '18.9029C16.7224 19.7083 15.426 19.7083 12.8333 19.7083H9.16666C6.57394 19.7083 5.27758 ' +
-      '19.7083 4.47212 18.9029C3.66666 18.0974 3.66666 16.801 3.66666 14.2083V11H3.06823' +
-      'C2.38622 11 1.83333 10.4472 1.83333 9.76507C1.83333 9.38713 2.00639 9.03004 2.30303 ' +
-      '8.79585L10.182 2.57567C10.4149 2.39173 10.7031 2.29167 11 2.29167C11.2969 2.29167 11.5851 ' +
-      '2.39173 11.818 2.57567Z';
+      'M11.818 2.57566L19.6969 8.79584C19.9935 9.03003 20.1666 9.38711 20.1666 9.76505C20.1666 ' +
+      '10.4471 19.6137 11 18.9317 11H18.3333V14.2083C18.3333 16.801 18.3333 18.0974 17.5278 ' +
+      '18.9028C16.7223 19.7083 15.426 19.7083 12.8333 19.7083H9.16659C6.57386 19.7083 5.2775 ' +
+      '19.7083 4.47204 18.9028C3.66659 18.0974 3.66659 16.801 3.66659 14.2083V11H3.06815' +
+      'C2.38614 11 1.83325 10.4471 1.83325 9.76505C1.83325 9.38711 2.00632 9.03003 2.30295 ' +
+      '8.79584L10.1819 2.57566C10.4148 2.39171 10.703 2.29166 10.9999 2.29166C11.2968 2.29166 11.585 ' +
+      '2.39171 11.818 2.57566Z';
     const pathDoor =
-      'M13.2917 19.7083V15.5833C13.2917 14.7266 13.2917 14.2982 13.1074 13.9792C12.9868 ' +
-      '13.7702 12.8132 13.5965 12.6042 13.4759C12.2851 13.2917 11.8567 13.2917 11 13.2917' +
-      'C10.1433 13.2917 9.71492 13.2917 9.39583 13.4759C9.18683 13.5965 9.01322 13.7702 ' +
-      '8.89254 13.9792C8.70833 14.2982 8.70833 14.7266 8.70833 15.5833V19.7083';
+      'M13.2916 19.7083V15.5833C13.2916 14.7266 13.2916 14.2982 13.1073 13.9792C12.9867 ' +
+      '13.7702 12.8131 13.5965 12.6041 13.4759C12.285 13.2917 11.8566 13.2917 10.9999 13.2917' +
+      'C10.1432 13.2917 9.71484 13.2917 9.39575 13.4759C9.18675 13.5965 9.01314 13.7702 ' +
+      '8.89247 13.9792C8.70825 14.2982 8.70825 14.7266 8.70825 15.5833V19.7083';
     return (
       <Svg width={w} height={h} viewBox="0 0 22 22" fill="none" accessibilityRole="image">
         <Defs>
           <LinearGradient
             id={gradId}
-            x1="11.0018"
-            y1="2.2921"
-            x2="11.0009"
+            x1="11.0004"
+            y1="13.2918"
+            x2="10.9999"
             y2="19.7083"
             gradientUnits="userSpaceOnUse"
           >
@@ -53,9 +53,8 @@ export function TabHomeIcon({ size = 24, active = false }) {
           </LinearGradient>
         </Defs>
         <Path d={pathRoof} fill={Colors.textWhite} />
-        <Path d={pathRoof} fill={`url(#${gradId})`} />
         <Path d={pathDoor} fill={Colors.gold} />
-        <Path d={pathDoor} fill={Colors.backgroundDark} />
+        <Path d={pathDoor} fill={`url(#${gradId})`} />
       </Svg>
     );
   }
@@ -161,46 +160,38 @@ export function TabQiblaIcon({ size = 24, active = false }) {
   const h = size;
 
   if (active) {
-    const gradId = `qibla-tab-active-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
     const pathRing =
-      'M20.1667 11C20.1667 16.0626 16.0626 20.1667 11 20.1667C5.9374 20.1667 1.83334 16.0626 ' +
-      '1.83334 11C1.83334 5.93738 5.9374 1.83333 11 1.83333C16.0626 1.83333 20.1667 5.93738 20.1667 11Z';
+      'M20.1666 11C20.1666 16.0626 16.0625 20.1667 10.9999 20.1667C5.93731 20.1667 1.83325 16.0626 ' +
+      '1.83325 11C1.83325 5.93738 5.93731 1.83333 10.9999 1.83333C16.0625 1.83333 20.1666 5.93738 20.1666 11Z';
     const pathNeedle =
-      'M12.5518 6.85359L10.0471 7.88495C9.29152 8.19606 8.91378 8.35161 8.6327 8.6327C8.35161 ' +
-      '8.91378 8.19606 9.29152 7.88495 10.0471L6.85359 12.5518C6.08002 14.4305 5.69323 15.3698 ' +
-      '6.1617 15.8384C6.63017 16.3068 7.56951 15.92 9.44818 15.1465L11.9529 14.115C12.7085 13.804 ' +
-      '13.0862 13.6484 13.3673 13.3673C13.6484 13.0862 13.804 12.7085 14.115 11.9529L15.1465 9.44818' +
-      'C15.92 7.56951 16.3068 6.63017 15.8384 6.1617C15.3698 5.69323 14.4305 6.08002 12.5518 6.85359Z';
+      'M12.5517 6.85359L10.047 7.88495C9.29143 8.19606 8.91368 8.35161 8.63261 8.6327C8.35152 ' +
+      '8.91378 8.19597 9.29152 7.88485 10.0471L6.8535 12.5518C6.07993 14.4305 5.69314 15.3698 ' +
+      '6.16161 15.8384C6.63007 16.3068 7.56942 15.92 9.44809 15.1465L11.9528 14.115C12.7084 13.804 ' +
+      '13.0862 13.6484 13.3672 13.3673C13.6483 13.0862 13.8039 12.7085 14.1149 11.9529L15.1464 9.44818' +
+      'C15.9199 7.56951 16.3067 6.63017 15.8383 6.1617C15.3698 5.69323 14.4304 6.08002 12.5517 6.85359Z';
     const pathPivot = 'M11 11V11.01';
 
     return (
       <Svg width={w} height={h} viewBox="0 0 22 22" fill="none" accessibilityRole="image">
-        <Defs>
-          <LinearGradient
-            id={gradId}
-            x1="11.0019"
-            y1="1.83378"
-            x2="11.0008"
-            y2="20.1667"
-            gradientUnits="userSpaceOnUse"
-          >
-            <Stop stopColor={Colors.goldStart} offset="0" />
-            <Stop stopColor={Colors.goldMid} offset="0.5" />
-            <Stop stopColor={Colors.goldEnd} offset="1" />
-          </LinearGradient>
-        </Defs>
-        <Path d={pathRing} fill={`url(#${gradId})`} />
-        <Path d={pathNeedle} fill={Colors.backgroundDark} />
         <Path
-          d={pathPivot}
-          stroke={QIBLA_ACTIVE_CENTER_INK}
-          strokeWidth={2}
+          d={pathRing}
+          fill={Colors.textWhite}
+          stroke={Colors.textWhite}
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path
+          d={pathNeedle}
+          fill={Colors.gold}
+          stroke={Colors.gold}
+          strokeWidth={1.5}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <Path
           d={pathPivot}
-          stroke={Colors.gold}
+          stroke={QIBLA_ACTIVE_CENTER_INK}
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -256,48 +247,33 @@ export function TabDhikrIcon({ size = 24, active = false }) {
 
   if (active) {
     const h = Math.round((size * 21) / 20);
-    const gradId = `dhikr-tab-active-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
     const pathFill =
-      'M15.0087 6.74128L16.2501 5.49996L15.0087 6.74128ZM17.0834 11.75C17.0834 15.662 13.9121 18.8333 ' +
-      '10.0001 18.8333C6.08806 18.8333 2.91675 15.662 2.91675 11.75C2.91675 7.83794 6.08806 4.66663 ' +
-      '10.0001 4.66663C13.9121 4.66663 17.0834 7.83794 17.0834 11.75Z';
+      'M16.0087 7.74132L17.2501 6.5L16.0087 7.74132ZM18.0834 12.75C18.0834 16.662 14.9121 19.8333 ' +
+      '11.0001 19.8333C7.08806 19.8333 3.91675 16.662 3.91675 12.75C3.91675 8.83798 7.08806 5.66666 ' +
+      '11.0001 5.66666C14.9121 5.66666 18.0834 8.83798 18.0834 12.75Z';
     const pathStrokeOuter =
-      'M15.0087 6.74128L16.2501 5.49996M17.0834 11.75C17.0834 15.662 13.9121 18.8333 10.0001 18.8333' +
-      'C6.08806 18.8333 2.91675 15.662 2.91675 11.75C2.91675 7.83794 6.08806 4.66663 10.0001 ' +
-      '4.66663C13.9121 4.66663 17.0834 7.83794 17.0834 11.75Z';
+      'M16.0087 7.74132L17.2501 6.5M18.0834 12.75C18.0834 16.662 14.9121 19.8333 11.0001 19.8333' +
+      'C7.08806 19.8333 3.91675 16.662 3.91675 12.75C3.91675 8.83798 7.08806 5.66666 11.0001 ' +
+      '5.66666C14.9121 5.66666 18.0834 8.83798 18.0834 12.75Z';
     const pathArc =
-      'M10.0001 16.3333C7.46877 16.3333 5.41675 14.2813 5.41675 11.75C5.41675 9.21863 ' +
-      '7.46877 7.16663 10.0001 7.16663';
-    const pathTop = 'M12.0834 2.16663H7.91675';
-    const pathHand = 'M10 11.75L12.9167 8.83337';
+      'M11.0001 17.3333C8.46877 17.3333 6.41675 15.2813 6.41675 12.75C6.41675 10.2187 ' +
+      '8.46877 8.16666 11.0001 8.16666';
+    const pathTop = 'M13.0834 3.16667H8.91675';
+    const pathHand = 'M11 12.75L13.9167 9.83334';
 
     return (
       <Svg width={w} height={h} viewBox="0 0 20 21" fill="none" accessibilityRole="image">
-        <Defs>
-          <LinearGradient
-            id={gradId}
-            x1="10.0015"
-            y1="4.66697"
-            x2="10.0007"
-            y2="18.8333"
-            gradientUnits="userSpaceOnUse"
-          >
-            <Stop stopColor={Colors.goldStart} offset="0" />
-            <Stop stopColor={Colors.goldMid} offset="0.5" />
-            <Stop stopColor={Colors.goldEnd} offset="1" />
-          </LinearGradient>
-        </Defs>
-        <Path d={pathFill} fill={`url(#${gradId})`} />
+        <Path d={pathFill} fill={Colors.textWhite} />
         <Path
           d={pathStrokeOuter}
-          stroke={`url(#${gradId})`}
+          stroke={Colors.textWhite}
           strokeWidth={1.5}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <Path
           d={pathArc}
-          stroke={Colors.backgroundDark}
+          stroke={Colors.gold}
           strokeWidth={1.5}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -311,7 +287,7 @@ export function TabDhikrIcon({ size = 24, active = false }) {
         />
         <Path
           d={pathHand}
-          stroke={Colors.backgroundDark}
+          stroke={Colors.gold}
           strokeWidth={1.5}
           strokeLinecap="round"
           strokeLinejoin="round"
