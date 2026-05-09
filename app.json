@@ -11,7 +11,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.namazmentor.app",
+      "bundleIdentifier": "com.susmoy.namazmentor",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "We use your location to calculate accurate prayer times and Qibla direction.",
         "NSUserNotificationsUsageDescription": "Namaz Mentor uses notifications to remind you when each prayer begins."
@@ -25,8 +25,8 @@
         "foregroundImage": "./assets/img/icon.png",
         "backgroundColor": "#021226"
       },
-      "package": "com.namazmentor.app",
-      "permissions": [
+      "package": "com.susmoy.namazmentor",
+      "permissions": [  
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "RECEIVE_BOOT_COMPLETED",
@@ -44,6 +44,12 @@
           ]
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "bb7c1fd6-9a0e-4998-a36b-78bf182be657"
+      }
+    },
+    "owner": "chadni"
   }
 }
