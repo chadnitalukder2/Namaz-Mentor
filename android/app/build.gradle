@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.namazmentor.app'
+    namespace 'com.susmoy.namazmentor'
     defaultConfig {
-        applicationId 'com.namazmentor.app'
+        applicationId 'com.susmoy.namazmentor'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -1,6 +1,6 @@
 {
-  "appId": "com.namazmentor.app",
-  "appName": "NamazApp",
+  "appId": "com.susmoy.namazmentor",
+  "appName": "Namaz Mentor",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"

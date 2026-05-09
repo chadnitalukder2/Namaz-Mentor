@@ -1,4 +1,4 @@
-package com.namazmentor.app
+package com.susmoy.namazmentor
 
 import android.app.Application
 import android.content.res.Configuration
